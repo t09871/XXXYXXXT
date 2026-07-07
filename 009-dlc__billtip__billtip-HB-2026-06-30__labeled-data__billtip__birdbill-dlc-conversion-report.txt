@@ -1,0 +1,20 @@
+HBMR / Birdbill JSON to DLC Converter v0.1.0
+created_at: 2026-06-30T17:17:22
+
+json_path: D:\HBMR\output\billtip-trainer\billbase-billtip-training-v062-premium.json
+config_path: D:\HBMR\dlc\billtip\billtip-HB-2026-06-30\config.yaml
+output_dir: D:\HBMR\dlc\billtip\billtip-HB-2026-06-30\labeled-data\billtip
+csv_path: D:\HBMR\dlc\billtip\billtip-HB-2026-06-30\labeled-data\billtip\CollectedData_Birdbill.csv
+h5_path: D:\HBMR\dlc\billtip\billtip-HB-2026-06-30\labeled-data\billtip\CollectedData_Birdbill.h5
+config_patch: patched with PyYAML; backup=D:\HBMR\dlc\billtip\billtip-HB-2026-06-30\config.yaml.birdbill-backup
+
+exported_rows: 118
+skipped_rows: 0
+missing_or_failed_images: 0
+
+bodyparts:
+- bill_base
+- bill_tip
+
+Next likely DLC command, using the DLC environment Python:
+C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe -c \"import deeplabcut; deeplabcut.create_training_dataset(r'D:\HBMR\dlc\billtip\billtip-HB-2026-06-30\config.yaml', net_type='resnet_50', augmenter_type='imgaug')\"

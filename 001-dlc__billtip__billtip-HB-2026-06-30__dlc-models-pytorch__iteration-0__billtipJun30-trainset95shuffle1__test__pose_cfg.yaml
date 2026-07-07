@@ -1,0 +1,12 @@
+dataset: D:\HBMR\dlc\billtip\billtip-HB-2026-06-30
+dataset_type: multi-animal-imgaug
+num_joints: 2
+all_joints:
+- - 0
+- - 1
+all_joints_names:
+- bill_base
+- bill_tip
+net_type: resnet_50
+global_scale: 1
+scoremap_dir: test

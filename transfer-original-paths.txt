@@ -1,0 +1,17 @@
+﻿HBMR transfer original path map
+created = 2026-07-07 12:56:17
+root = D:\HBMR
+transfer_dir = D:\HBMR\transfer
+
+001-dlc__billtip__billtip-HB-2026-06-30__dlc-models-pytorch__iteration-0__billtipJun30-trainset95shuffle1__test__pose_cfg.yaml	dlc\billtip\billtip-HB-2026-06-30\dlc-models-pytorch\iteration-0\billtipJun30-trainset95shuffle1\test\pose_cfg.yaml
+002-dlc__billtip__billtip-HB-2026-06-30__dlc-models-pytorch__iteration-0__billtipJun30-trainset95shuffle1__train__learning_stats.csv	dlc\billtip\billtip-HB-2026-06-30\dlc-models-pytorch\iteration-0\billtipJun30-trainset95shuffle1\train\learning_stats.csv
+003-dlc__billtip__billtip-HB-2026-06-30__dlc-models-pytorch__iteration-0__billtipJun30-trainset95shuffle1__train__pytorch_config.yaml	dlc\billtip\billtip-HB-2026-06-30\dlc-models-pytorch\iteration-0\billtipJun30-trainset95shuffle1\train\pytorch_config.yaml
+004-dlc__billtip__billtip-HB-2026-06-30__dlc-models-pytorch__iteration-0__billtipJun30-trainset95shuffle1__train__train.txt	dlc\billtip\billtip-HB-2026-06-30\dlc-models-pytorch\iteration-0\billtipJun30-trainset95shuffle1\train\train.txt
+005-dlc__billtip__billtip-HB-2026-06-30__evaluation-results-pytorch__iteration-0__billtipJun30-trainset95shuffle1__DLC_Resnet50_billtipJun30shuffle1_snapshot_best-20.h5	dlc\billtip\billtip-HB-2026-06-30\evaluation-results-pytorch\iteration-0\billtipJun30-trainset95shuffle1\DLC_Resnet50_billtipJun30shuffle1_snapshot_best-20.h5
+006-dlc__billtip__billtip-HB-2026-06-30__evaluation-results-pytorch__iteration-0__billtipJun30-trainset95shuffle1__DLC_Resnet50_billtipJun30shuffle1_snapshot_best-20-results.csv	dlc\billtip\billtip-HB-2026-06-30\evaluation-results-pytorch\iteration-0\billtipJun30-trainset95shuffle1\DLC_Resnet50_billtipJun30shuffle1_snapshot_best-20-results.csv
+007-dlc__billtip__billtip-HB-2026-06-30__evaluation-results-pytorch__iteration-0__CombinedEvaluation-results.csv	dlc\billtip\billtip-HB-2026-06-30\evaluation-results-pytorch\iteration-0\CombinedEvaluation-results.csv
+008-dlc__billtip__billtip-HB-2026-06-30__labeled-data__billtip__.napari-deeplabcut.json	dlc\billtip\billtip-HB-2026-06-30\labeled-data\billtip\.napari-deeplabcut.json
+009-dlc__billtip__billtip-HB-2026-06-30__labeled-data__billtip__birdbill-dlc-conversion-report.txt	dlc\billtip\billtip-HB-2026-06-30\labeled-data\billtip\birdbill-dlc-conversion-report.txt
+010-gpt-prediction.json	gpt-prediction.json
+011-gpt-prediction2.json	gpt-prediction2.json
+012-megadetector.py	megadetector.py

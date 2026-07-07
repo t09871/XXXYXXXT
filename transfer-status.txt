@@ -1,0 +1,17 @@
+﻿script = copy-missing-hbmr-transfer-v0.1.ps1
+status = PASS
+root = D:\HBMR
+transfer_dir = D:\HBMR\transfer
+dry_run = false
+include_dlc_snapshots = False
+include_downloaded_modules = False
+planned_items = 12
+copied_count = 12
+missing_source_count = 0
+total_mb_copied_or_planned = 0.132
+manifest = D:\HBMR\transfer\transfer-manifest.csv
+original_paths = D:\HBMR\transfer\transfer-original-paths.txt
+
+Default skip policy:
+downloaded/unchanged LightGlue files skipped unless -IncludeDownloadedModules is used
+DLC snapshot .pt weights skipped unless -IncludeDlcSnapshots is used

@@ -1,3 +1,4 @@
+OLD 
 # SmartFrameSampler.py | v0.3 | 2026-07-07 PDT | Birdbill Step 7 promoted SmartFrameSampler app module
 from __future__ import annotations
 

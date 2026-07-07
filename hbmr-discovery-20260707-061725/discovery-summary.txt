@@ -1,0 +1,12 @@
+﻿hbmr-discovery
+created = 2026-07-07 06:21:34
+root = D:\HBMR
+out = D:\birdbill\output\debug\hbmr-discovery-20260707-061725
+read_only = true
+total_files = 215941
+total_folders = 16913
+total_mb = 44565.34
+total_gb = 43.521
+
+bulk_or_generated_names = .git, __pycache__, .venv, venv, env, site-packages, dist, build, output, outputs, crops, frames, preview-frames, debug, archive, archives, backup, backups, models, node_modules
+interesting_extensions = .py, .ps1, .bat, .cmd, .ini, .yaml, .yml, .json, .jsonl, .txt, .md, .csv, .h5, .pkl, .sqlite, .db, .pth, .pt, .ckpt

@@ -1,0 +1,22 @@
+﻿status = PASS
+root = D:\HBMR
+out = D:\birdbill\output\debug\hbmr-discovery-20260707-061725
+total_files = 215941
+total_folders = 16913
+total_gb = 43.521
+source_config_inventory_rows = 84
+database_mutation = false
+durable_evidence_written = false
+media_files_written = 0
+
+Upload or commit these first:
+  discovery-summary.txt
+  top-folder-summary.csv
+  folder-summary-depth2.csv
+  extension-summary-all.csv
+  extension-summary-active-filtered.csv
+  source-config-inventory-filtered.csv
+  largest-300-files.csv
+  largest-200-depth2-folders.csv
+  directory-tree-depth3.txt
+  likely-entrypoints-and-canon-files.csv

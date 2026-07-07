@@ -1,0 +1,3289 @@
+canon.txt | HBMR v1.0 | 2026-06-18 PDT
+
+settings.ini contract notes | HBMR programnames.txt block
+
+File:
+settings.ini
+
+Current header:
+settings.ini | MR v2.3.0 | 2026-06-18 PDT
+
+Potential naming conflict:
+Header says MR, but canonical user-facing project name should be HBMR.
+Use HBMR in future user-facing headers unless deliberately preserving historical version text.
+
+Sections currently defined:
+[video]
+
+Canonical settings keys:
+sample_every_seconds
+max_frames_per_video
+jpeg_quality
+
+Current values:
+sample_every_seconds = 2.0
+max_frames_per_video = 300
+jpeg_quality = 95
+
+Owned by:
+settings.ini owns user-editable video sampling/export configuration.
+
+Likely consumed by:
+main.py
+
+Potential contract dependencies:
+main.py may depend on [video]
+main.py may depend on sample_every_seconds
+main.py may depend on max_frames_per_video
+main.py may depend on jpeg_quality
+
+Do not rename without updating:
+main.py settings parser
+any future GUI/settings editor
+any documentation or launcher text that references these settings
+
+Do not infer alternate names:
+frame_interval
+sample_interval
+sample_seconds
+max_frames
+quality
+jpg_quality
+
+Programnames note:
+These settings keys are cross-file contracts because changing one character can break config loading.
+
+megadetector.py contract notes | HBMR programnames.txt block
+
+File:
+megadetector.py
+
+Current header:
+megadetector.py | MR v2.2.8 Step 3 | 2026-06-18 PDT
+
+Potential naming conflict:
+Header and printed crash/status text use MR instead of canonical HBMR.
+
+Owns:
+MegaDetector model loading
+local detector model path
+image input collection for detector testing
+raw detector call
+normalization of detector results into plain animal detections
+animal crop export
+detector confidence/class filtering
+crop padding behavior
+
+Canonical constants:
+MODEL_VERSION = "MDV6-yolov9-c"
+LOCAL_MODEL_FILE = models/MDV6b-yolov9-c.pt
+OUTPUT_CROPS_DIR = output/crops
+IMAGE_EXTENSIONS = .jpg .jpeg .png .bmp .webp .tif .tiff
+ANIMAL_CLASS_ID = 0
+CONFIDENCE_THRESHOLD = 0.20
+CROP_PADDING_RATIO = 0.20
+
+Canonical output folder:
+output/crops
+
+Canonical crop filename pattern:
+{source-image-stem}-animal-{index:03d}-conf{confidence-percent:03d}-pad20.png
+
+Canonical normalized detection fields:
+class_name
+class_id
+confidence
+x1
+y1
+x2
+y2
+
+Cross-file functions likely depended on:
+load_model()
+run_detector(model, image_path)
+normalize_animal_detections(raw_results)
+make_padded_box(detection, image_width, image_height)
+export_crops(image_path, animal_detections)
+process_image(model, image_path, image_index, total_images)
+
+Important boundary rule:
+megadetector.py owns detector internals, PytorchWildlife calls, model path, detector thresholds, class filtering, bounding-box normalization, and crop export mechanics.
+
+Important boundary rule:
+Other HBMR files should consume normalized detection/crop outputs, not PytorchWildlife raw detector objects.
+
+Do not rename without checking callers:
+MODEL_VERSION
+LOCAL_MODEL_FILE
+OUTPUT_CROPS_DIR
+normalize_animal_detections()
+export_crops()
+normalized detection keys: class_name, class_id, confidence, x1, y1, x2, y2
+
+Potential drift hazards:
+MR vs HBMR naming
+models/MDV6b-yolov9-c.pt vs model version MDV6-yolov9-c
+output/crops path
+animal class id = 0
+confidence threshold = 0.20
+pad20 filename text tied to CROP_PADDING_RATIO = 0.20
+raw detector field names: detections, xyxy, confidence, class_id
+test.bat references in printed user text
+
+Exclude from programnames:
+local loop variables
+print helper functions unless externally called
+PytorchWildlife internal method details except the fact that megadetector.py owns them
+
+main.py contract notes | HBMR programnames.txt block
+
+File:
+main.py
+
+Current header:
+main.py | HBMR v2.5.1 | 2026-06-18 PDT
+
+Potential naming conflict:
+APP_NAME and summary text use "MR / HBMR v2.5.1"; canonical user-facing project name should be HBMR.
+
+Owns:
+video collection
+settings loading
+frame sampling
+main orchestration
+database initialization/repair
+crop_queue insertion
+review.html generation
+current-review.jpg contact sheet generation
+per-video summary report generation
+calling megadetector.py as subprocess
+
+Canonical constants:
+APP_VERSION = "v2.5.1"
+ROOT = project folder containing main.py
+SETTINGS_FILE = settings.ini
+MEGADETECTOR_FILE = megadetector.py
+VIDEO_EXTENSIONS = .mp4 .mov .avi .mkv .m4v .wmv
+NEW = "new"
+
+Canonical input launcher text:
+Drag video files or a folder onto run.bat
+
+Canonical settings file:
+settings.ini
+
+Settings keys consumed:
+[video] sample_every_seconds
+[video] max_frames_per_video
+[video] jpeg_quality
+[video] clear_old_sampled_frames
+
+Canonical database:
+output/database/mr-review.db
+
+Canonical table:
+crop_queue
+
+Canonical crop_queue columns:
+id
+created
+source_video
+crop_path
+review_status
+species_or_type
+individual_name
+notes
+name
+reviewed_at
+
+Canonical review_status value used here:
+new
+
+Canonical generated folders:
+output/database
+output/frames/{safe-video-stem}
+output/crops
+output/review
+output/reports
+
+Canonical sampled frame filename pattern:
+{safe-video-stem}-frame-{frame-index:08d}-t{timestamp-seconds:07.2f}.jpg
+
+Canonical MegaDetector subprocess call:
+python megadetector.py {frame-folder}
+
+Canonical crop discovery pattern:
+output/crops/{safe-video-stem}-frame-*-animal-*.png
+
+Canonical generated files:
+output/review/review.html
+output/review/current-review.jpg
+output/reports/{safe-video-stem}-summary.txt
+
+Cross-file functions/contracts likely depended on:
+safe_stem(path)
+load_settings()
+init_database()
+add_crops_to_database(db_path, video_path, crops)
+build_review_page(db_path)
+build_review_contact_sheet(db_path)
+sample_video(video_path, settings)
+run_megadetector_on_folder(frame_folder)
+get_recent_crops(video_stem, run_started_at)
+write_video_summary(...)
+
+Important boundary rule:
+main.py owns orchestration, sampling, queue creation, and generated review artifacts, but should not own detector internals or human identity review decisions.
+
+Important boundary rule:
+main.py may create and repair crop_queue schema, but review.py owns review_status transitions after human review.
+
+Important boundary rule:
+main.py calls megadetector.py only through the normalized crop-output contract, not by importing detector internals.
+
+Do not rename without checking callers:
+settings.ini
+megadetector.py
+output/database/mr-review.db
+crop_queue
+review_status
+new
+crop_path
+source_video
+output/crops
+output/review/review.html
+output/review/current-review.jpg
+output/reports/{safe-video-stem}-summary.txt
+
+Potential drift hazards:
+MR / HBMR vs HBMR naming
+run.bat launcher name
+mr-review.db filename
+crop_queue table name
+review_status='new'
+profile pictures terminology vs crop queue terminology
+review.html title says HummingbirdMindreader Profiles even though file is review output
+current-review.jpg depends only on review_status='new'
+pad/crop filenames generated by megadetector.py must match get_recent_crops pattern
+clear_old_sampled_frames appears in main.py but was missing from the provided settings.ini block, relying on fallback=True
+
+Exclude from programnames:
+local loop variables
+OpenCV tile sizing constants unless other files depend on them
+HTML/CSS styling details
+console progress text unless used by launcher/tests
+
+review.py contract notes | HBMR programnames.txt block
+
+File:
+review.py
+
+Current header:
+review.py | HBMR v2.5.1 | 2026-06-18 PDT
+
+Owns:
+human identity review workflow
+review_status transitions
+review contact sheet opening
+bird naming assignment
+existing-name reuse
+skip/quit review UX
+review-side schema repair
+
+Canonical database:
+output/database/mr-review.db
+
+Canonical table:
+crop_queue
+
+Canonical review_status values:
+new
+reviewed
+skipped
+
+Canonical generated input file:
+output/review/current-review.jpg
+
+Canonical crop_queue columns depended on:
+id
+created
+source_video
+crop_path
+review_status
+species_or_type
+individual_name
+notes
+name
+reviewed_at
+
+Cross-file functions/contracts likely depended on:
+db_path()
+review_sheet_path()
+connect()
+ensure_schema(conn)
+existing_names(conn)
+load_new(conn)
+open_review_sheet()
+mark_reviewed(conn, row_ids, bird_name)
+mark_skipped(conn, row_ids)
+review_rows(conn, rows)
+
+Important boundary rule:
+review.py owns human review decisions and review_status transitions.
+
+Important boundary rule:
+Only review.py should transition:
+new -> reviewed
+new -> skipped
+
+Important boundary rule:
+review.py assigns persistent bird identity fields:
+individual_name
+name
+reviewed_at
+
+Important boundary rule:
+review.py consumes generated crops/contact sheets but should not own crop generation, detector logic, or profile generation.
+
+Canonical review flow:
+load rows where review_status='new'
+-> open current-review.jpg
+-> user chooses existing or new bird name
+-> update crop_queue
+-> set review_status='reviewed'
+
+Canonical skip flow:
+review_status='skipped'
+
+Canonical reviewed-name reuse query depends on:
+individual_name
+name
+review_status='reviewed'
+
+Do not rename without checking callers:
+mr-review.db
+crop_queue
+review_status
+new
+reviewed
+skipped
+individual_name
+name
+reviewed_at
+output/review/current-review.jpg
+
+Potential drift hazards:
+review.py duplicates schema ownership already present in main.py
+name vs individual_name dual-field identity system
+review.py assumes current-review.jpg exists and matches current review queue
+profile pictures terminology vs crops terminology
+review.py currently reviews all rows returned by review_status='new' as one review group
+MR/HBMR terminology drift mostly resolved here
+
+Potential future architecture risk:
+Schema duplication between main.py and review.py could drift unless one file becomes canonical schema owner or schema shared centrally.
+
+Exclude from programnames:
+console menu text
+local placeholder string generation
+sqlite placeholder formatting details
+os.startfile implementation details
+
+dbcheck.py contract notes | HBMR programnames.txt block
+
+File:
+dbcheck.py
+
+Current header:
+dbcheck.py | HBMR diagnostic | 2026-06-18 PDT
+
+Purpose:
+diagnostic database inspection utility
+historical schema drift inspection
+legacy-table visibility tool
+
+Owns:
+database inspection only
+table/column diagnostics
+sample row printing
+legacy schema discovery
+
+Canonical database folder:
+output/database
+
+Canonical database search pattern:
+*.db
+
+Canonical historical/legacy fields inspected:
+bird_name
+reviewed
+false_positive
+event_id
+frame_number
+timestamp
+video_path
+crop_path
+
+Cross-file functions/contracts likely depended on:
+print_block(title)
+
+Important boundary rule:
+dbcheck.py is diagnostic-only and should not mutate HBMR databases.
+
+Important boundary rule:
+dbcheck.py intentionally references historical/legacy schema names for drift detection and recovery diagnostics.
+
+Potential drift hazards:
+bird_name vs individual_name
+reviewed integer field vs review_status text field
+video_path vs source_video
+legacy false_positive assumptions
+legacy event_id assumptions
+legacy timestamp assumptions
+
+Programnames recommendation:
+Mark dbcheck.py as non-canonical diagnostic tooling.
+Do not use dbcheck.py field assumptions as authoritative current HBMR schema contracts.
+
+Exclude from programnames:
+sample row formatting
+diagnostic print formatting
+legacy query implementation details
+
+HBMR.bat contract notes | HBMR programnames.txt block
+
+File:
+HBMR.bat
+
+Current header:
+HBMR.bat | HBMR v2.4.4 | 2026-06-18 PDT
+
+Potential version conflict:
+Launcher says HBMR v2.4.4 while current .py files are HBMR v2.5.1.
+
+Owns:
+top-level user launcher flow
+drag-and-drop entry point
+detect -> review -> profiles execution order
+final profile index opening
+
+Canonical launcher name:
+HBMR.bat
+
+Canonical working directory behavior:
+cd /d "%~dp0"
+
+Canonical launcher flow:
+python main.py %*
+python review.py
+python profiles.py
+start "" "output\profiles\index.html"
+
+Canonical user input:
+drag video file or files onto HBMR.bat
+
+Canonical generated profile index opened:
+output/profiles/index.html
+
+Cross-file/process dependencies:
+main.py must exist
+review.py must exist
+profiles.py must exist
+output/profiles/index.html must be generated by profiles.py
+
+Important boundary rule:
+HBMR.bat owns process order only. It should not contain database logic, detector logic, review logic, or profile-generation logic.
+
+Important boundary rule:
+profiles.py owns output/profiles/index.html. HBMR.bat only opens it after profile generation.
+
+Do not rename without checking:
+HBMR.bat
+main.py
+review.py
+profiles.py
+output/profiles/index.html
+
+Potential drift hazards:
+launcher version v2.4.4 vs program version v2.5.1
+main.py text references run.bat, but canonical launcher is HBMR.bat
+profiles.py was not included in current review, but launcher depends on it
+index.html callup lives here
+launcher does not stop if main.py, review.py, or profiles.py fails
+single-file drag text says “a video file” though main.py supports files or folder
+optional pause currently disabled
+
+Programnames recommendation:
+Mark HBMR.bat as canonical user-facing launcher.
+Replace legacy run.bat/test.bat references unless intentionally keeping diagnostic launchers.
+
+profiles.py contract notes | HBMR canon.txt block
+
+File:
+profiles.py
+
+Current header:
+profiles.py | MR / HBMR v2.5.1 | 2026-06-18 PDT
+
+Potential naming conflict:
+Header and console output use MR / HBMR instead of canonical HBMR.
+
+Owns:
+profile generation
+profile index generation
+individual bird pages
+profile data export
+profile image copying
+hero image selection
+profile stats estimation
+chronology estimates
+default measurements/personality/awards/behavior placeholders
+derived profile assets
+
+Canonical constants:
+APP_VERSION = "v2.5.1"
+OUTPUT_DIR = output
+DATABASE_DIR = output/database
+PROFILES_DIR = output/profiles
+PROFILES_DATA_DIR = output/profiles/data
+REVIEW_DB = output/database/mr-review.db
+UNKNOWN_NAME = "Unknown"
+
+Canonical generated folders:
+output/profiles
+output/profiles/data
+output/profiles/data/{profile-name}
+output/profiles/data/{profile-name}/best-crops
+
+Canonical generated files:
+output/profiles/index.html
+output/profiles/{profile-name}.html
+output/profiles/data/{profile-name}/profile.json
+output/profiles/data/{profile-name}/events.csv
+output/profiles/data/{profile-name}/hero.jpg
+output/profiles/data/{profile-name}/best-crops/{source-crop-name}
+
+Canonical database input:
+output/database/mr-review.db
+
+Canonical preferred current identity fields consumed:
+individual_name
+name
+
+Legacy/fallback identity fields consumed:
+bird_name
+profile_name
+label
+
+Canonical observation fields normalized:
+name
+crop_path
+event_id
+source_video
+timestamp
+parsed_timestamp
+duration
+
+Current table-picking behavior:
+profiles.py searches for legacy tables before crop_queue:
+observations
+review_items
+detections
+crops
+events
+
+Potential critical drift hazard:
+crop_queue is not listed as a preferred table name in pick_table().
+profiles.py may still find crop_queue by columns, but crop_queue should be explicitly preferred to avoid accidental legacy-table selection.
+
+Canonical output opened by launcher:
+output/profiles/index.html
+
+Cross-file functions/contracts likely depended on:
+build_profiles()
+db_connect()
+load_rows(conn)
+normalize_observations(rows)
+group_by_profile(observations)
+copy_profile_images(profile_name, observations)
+write_profile_data(profile_name, observations, stats, hero, copied_images)
+write_profile_html(profile_name, stats, hero, copied_images)
+write_index(profile_summaries)
+
+Important boundary rule:
+profiles.py owns derived profile/community pages and profile data exports only.
+
+Important boundary rule:
+profiles.py should read canonical reviewed observation data but should not mutate review database state.
+
+Important boundary rule:
+profiles.py generated outputs are derived/regeneratable state, not canonical source-of-truth state.
+
+Important boundary rule:
+HBMR.bat opens output/profiles/index.html, but profiles.py owns generating it.
+
+Do not rename without checking:
+output/database/mr-review.db
+output/profiles/index.html
+output/profiles/data
+profile.json
+events.csv
+hero.jpg
+crop_path
+individual_name
+name
+source_video
+review_status/reviewed filtering if later added
+
+Potential drift hazards:
+MR / HBMR naming
+crop_queue missing from preferred table list
+profiles.py currently loads all rows from chosen table, not only review_status='reviewed'
+legacy table fallback could accidentally pick old observations/review_items/detections/crops/events
+name sanitization affects generated profile filenames
+Unknown profile may collect unnamed/unreviewed rows
+profile pages are derived state and should be rebuildable after cleanup
+default stats/awards/personality are placeholders, not measured truth yet
+
+Programnames recommendation:
+Add crop_queue as the first preferred table in pick_table().
+Consider filtering profile generation to reviewed rows only.
+Mark all output/profiles files as derived/rebuildable.
+
+review.bat contract notes | HBMR canon.txt block
+
+File:
+review.bat
+
+Purpose:
+review-only launcher
+manual review shortcut
+
+Canonical launcher flow:
+python review.py
+python profiles.py
+start "" "output\profiles\index.html"
+
+Cross-file/process dependencies:
+review.py must exist
+profiles.py must exist
+output/profiles/index.html must be generated by profiles.py
+
+Important boundary rule:
+review.bat skips detection/sampling and operates on existing queued review data only.
+
+Potential drift hazards:
+duplicate launcher logic vs HBMR.bat
+index.html callup duplicated here
+profiles.py dependency duplicated here
+review-only launcher may become stale if main launcher flow changes
+
+Programnames recommendation:
+Keep review.bat lightweight and aligned with HBMR.bat profile-generation flow.
+
+run.bat contract notes | HBMR canon.txt block
+
+File:
+run.bat
+
+Purpose:
+legacy launcher alias
+older detection/review launcher path
+
+Potential drift hazard:
+Canonical launcher is HBMR.bat.
+run.bat should either:
+
+1. remain as compatibility alias only
+   or
+2. be removed to prevent launcher drift/confusion.
+
+Important boundary rule:
+Do not allow run.bat and HBMR.bat to evolve different pipeline orders or settings assumptions.
+
+Programnames recommendation:
+If retained, mark run.bat as legacy compatibility launcher only.
+
+cleanup.py contract notes | HBMR canon.txt block
+
+File:
+cleanup.py
+
+Current header:
+cleanup.py | HBMR v2.5.2 | 2026-06-18 PDT
+
+Owns:
+safe identity cleanup
+bird rename operations
+bird merge operations
+manual row status correction
+manual row deletion
+profile rebuild callup
+cleanup-side schema repair
+
+Canonical database:
+output/database/mr-review.db
+
+Canonical table:
+crop_queue
+
+Canonical review_status values:
+new
+reviewed
+skipped
+
+Canonical profile rebuild call:
+python profiles.py
+
+Canonical editable identity fields:
+individual_name
+name
+
+Canonical timestamp field updated:
+reviewed_at
+
+Cross-file functions/contracts:
+connect()
+ensure_schema()
+list_names()
+list_recent()
+rename_bird()
+merge_birds()
+mark_rows_status()
+delete_rows()
+rebuild_profiles()
+
+Important boundary rule:
+cleanup.py may mutate canonical crop_queue identity/review state, but should do so through explicit user-selected cleanup actions only.
+
+Important boundary rule:
+cleanup.py may call profiles.py to rebuild derived profile outputs, but profiles.py owns the generated profile files.
+
+Important boundary rule:
+cleanup.py should not own detector logic, sampling logic, crop generation, or profile page formatting.
+
+Potential drift hazards:
+cleanup.py duplicates schema repair already present in main.py and review.py
+delete_rows removes database rows but does not delete crop image files
+rename/merge updates both individual_name and name because both fields currently exist
+profile rebuild depends on profiles.py and output/profiles/index.html behavior
+manual row deletion may require future derived-state rebuild discipline
+
+Programnames recommendation:
+Treat cleanup.py as the canonical safe editor for identity cleanup and review-state correction.
+
+cleanup.bat contract notes | HBMR canon.txt block
+
+File:
+cleanup.bat
+
+Current header:
+cleanup.bat | HBMR v2.5.2 | 2026-06-18 PDT
+
+Owns:
+cleanup utility launcher
+manual cleanup entry point
+
+Canonical launcher flow:
+cd /d "%~dp0"
+python cleanup.py
+
+Cross-file/process dependencies:
+cleanup.py must exist
+output/database/mr-review.db must exist for cleanup.py to operate
+
+Important boundary rule:
+cleanup.bat launches cleanup.py only. It should not contain database logic, profile logic, detector logic, or review logic.
+
+Potential drift hazards:
+cleanup.bat version must stay aligned with cleanup.py
+cleanup launcher should not duplicate HBMR.bat or review.bat pipeline logic
+optional pause currently disabled
+
+Programnames recommendation:
+Keep cleanup.bat as the dedicated manual cleanup launcher.
+
+cleanup.py canon.txt update | HBMR v2.5.3 | 2026-06-18 PDT
+
+cleanup.py contract changes | HBMR canon.txt block
+
+New canonical fields added to crop_queue:
+identity_status
+training_label
+cleanup_notes
+
+Canonical identity_status values:
+active
+false_positive
+provisional
+
+Important architecture change:
+False positives are now preserved as training data instead of being deleted by default.
+
+Important architecture change:
+cleanup.py is evolving from “manual DB surgery” into:
+identity management
+training-data tagging
+future autonomous-detector supervision
+
+New cleanup.py responsibilities:
+false-positive tagging
+identity-status management
+training export generation
+identity restoration from false-positive state
+numbered identity selection UX
+
+Canonical generated folder:
+output/training
+
+Canonical generated file:
+output/training/false-positive-training.csv
+
+Canonical false-positive naming pattern:
+FalsePositive-{label}
+
+Examples:
+FalsePositive-leaf
+FalsePositive-shadow
+FalsePositive-feeder-sway
+FalsePositive-blur
+
+Canonical training export fields:
+id
+created
+source_video
+crop_path
+individual_name
+name
+identity_status
+training_label
+cleanup_notes
+
+New cross-file/contracts:
+export_false_positive_training()
+mark_identity_false_positive()
+restore_identity_active()
+
+Important boundary rule:
+False positives should remain stored as longitudinal training data unless intentionally deleted.
+
+Important boundary rule:
+training_label is intended for future detector filtering/training systems and should remain human-readable.
+
+Important boundary rule:
+identity_status separates:
+real bird identity state
+from
+review workflow state
+
+Architectural distinction:
+review_status:
+new
+reviewed
+skipped
+
+identity_status:
+active
+false_positive
+provisional
+
+Important future direction:
+Future autonomous HBMR modes should:
+run detector
+auto-group identities
+preserve provisional identities
+preserve false positives
+allow later cleanup/confirmation passes
+
+Potential future detector pipeline:
+MegaDetector
+-> local HBMR false-positive filter
+-> auto identity grouping
+-> provisional profiles
+-> later cleanup confirmation
+
+Potential drift hazards:
+identity_status now exists separately from review_status
+FalsePositive-{label} naming depends on consistent prefix usage
+cleanup.py schema repair now overlaps with main.py and review.py
+future detector-training systems may depend on training_label naming consistency
+
+HBMR canon.txt additions | v2.5.4 | 2026-06-18 PDT
+
+========================================================================
+AUTONAME SYSTEM
+===============
+
+Canonical autoname module:
+autoname.py
+
+Purpose:
+allocate provisional autonomous bird identities
+without human prompts.
+
+Canonical provisional identity format:
+Bird001
+Bird002
+Bird003
+
+Rules:
+
+* fixed-width 3-digit numbering
+* zero-padded
+* lexicographically stable
+* provisional identities only
+* not treated as permanent biological truth
+
+Reserved future expansion:
+Bird1000+
+hexadecimal IDs
+Auto-XXXX
+UUID-backed identities
+
+Current canonical range:
+Bird001 -> Bird999
+
+Canonical autoname allocator function:
+allocate_bird_name(db_path)
+
+Function ownership:
+autoname.py owns all provisional identity allocation logic.
+
+Other modules must NOT:
+
+* generate Bird names themselves
+* guess next Bird number
+* manually increment IDs
+* create alternate provisional naming systems
+
+All provisional identity allocation must flow through:
+allocate_bird_name()
+
+========================================================================
+IDENTITY PHILOSOPHY
+===================
+
+Current meaning of provisional Bird identities:
+
+Bird identities are:
+observation-cluster hypotheses
+
+NOT:
+confirmed biological truth
+
+Purpose:
+allow large-scale autonomous ingestion
+while preserving uncertainty honestly.
+
+Later cleanup workflow may:
+
+* rename
+* merge
+* split
+* invalidate
+* false-positive tag
+* restore
+
+========================================================================
+AUTONOMOUS MODE
+===============
+
+Current direction:
+human prompts temporarily disabled.
+
+Pipeline direction:
+
+new crop
+-> allocate Bird###
+-> identity_status=provisional
+-> automatic insertion
+-> profile generation
+-> later cleanup/reconciliation
+
+Human review becomes:
+post-processing reconciliation
+rather than
+blocking ingestion.
+
+========================================================================
+CANONICAL STATUS VALUES
+=======================
+
+review_status:
+new
+reviewed
+skipped
+auto
+
+identity_status:
+active
+provisional
+false_positive
+
+========================================================================
+MODULE OWNERSHIP
+================
+
+autoname.py owns:
+
+* provisional identity allocation
+* autoname validation
+* autoname sorting helpers
+
+main.py owns:
+
+* crop ingestion
+* detector flow
+* DB insertion
+* launcher flow
+
+review.py owns:
+
+* optional human review workflows
+* review HTML generation
+* manual reconciliation UI
+
+cleanup.py owns:
+
+* identity reconciliation
+* merges/splits/restores
+* false-positive tagging
+* training export generation
+* rebuild/recovery tooling
+
+========================================================================
+IMPORTANT CONTRACT RULE
+=======================
+
+No module may generate provisional Bird names independently.
+
+Reason:
+prevents:
+
+* duplicate IDs
+* numbering drift
+* parallel naming logic
+* contract divergence
+* inconsistent provisional identity formats
+
+All provisional identity creation must flow through:
+autoname.py
+
+HBMR canon.txt update | v2.5.4 autoname main/review contracts | 2026-06-18 PDT
+
+========================================================================
+AUTONAME INGESTION CONTRACT
+===========================
+
+main.py now owns autonomous crop ingestion.
+
+When main.py inserts a new crop_queue row, it must assign:
+
+identity = Bird###
+identity_status = provisional
+review_status = auto
+reviewed_at = current timestamp
+
+main.py must NOT:
+
+* ask for bird names
+* pause for human review
+* generate Bird names directly
+* use individual_name as canonical identity
+* use name as canonical identity
+
+main.py must call:
+autoname.allocate_bird_name(db_path)
+
+========================================================================
+CANONICAL IDENTITY FIELD
+========================
+
+Canonical identity column:
+identity
+
+Legacy/non-canonical identity columns:
+individual_name
+name
+
+Legacy columns may still exist in old databases, but new code must not use them as canonical state.
+
+Migration rule:
+If old rows contain individual_name or name, review.py/cleanup.py may copy those values into identity when identity is blank.
+
+Canonical future code must read/write:
+identity
+
+========================================================================
+REVIEW STATUS MEANING
+=====================
+
+review_status values:
+
+auto:
+autonomously accepted into provisional identity system
+
+new:
+legacy or manual-review queue state
+
+reviewed:
+human-reviewed / manually confirmed
+
+skipped:
+human-skipped or intentionally ignored
+
+Current autoname mode normal state:
+review_status = auto
+
+========================================================================
+IDENTITY STATUS MEANING
+=======================
+
+identity_status values:
+
+provisional:
+autonomous observation-cluster hypothesis
+
+active:
+human-confirmed or cleanup-confirmed identity
+
+false_positive:
+known non-bird or rejected detector crop retained for training
+
+Current autoname mode normal state:
+identity_status = provisional
+
+========================================================================
+REVIEW.PY CONTRACT CHANGE
+=========================
+
+review.py no longer owns blocking human identity prompts in autoname mode.
+
+Current review.py responsibilities:
+
+* ensure crop_queue schema compatibility
+* migrate legacy individual_name/name into identity when identity is blank
+* autoname rows with blank identity
+* convert review_status=new rows to review_status=auto
+* print database status summary
+* list latest profile pictures
+* optionally open review contact sheet
+* optionally open review page
+
+review.py must NOT:
+
+* ask for bird names
+* block ingestion
+* require user input
+* overwrite existing identities unnecessarily
+* create alternate provisional naming rules
+
+========================================================================
+CURRENT AUTONOMOUS FLOW
+=======================
+
+video input
+-> sampled frames
+-> MegaDetector crops
+-> main.py inserts crop_queue rows
+-> autoname.py assigns Bird###
+-> identity_status=provisional
+-> review_status=auto
+-> profile/review outputs generated
+-> cleanup.py reconciles later
+
+========================================================================
+IMPORTANT DRIFT WARNING
+=======================
+
+Do not reintroduce individual_name/name as primary identity fields.
+
+Do not make review.py the identity-authoring bottleneck again while autoname mode is active.
+
+Do not scatter Bird### creation logic across files.
+
+All Bird### allocation must remain centralized in:
+autoname.py
+
+HBMR canon.txt update | v2.5.5 settings-driven autonomous review mode | 2026-06-18 PDT
+
+========================================================================
+SETTINGS ARCHITECTURE
+=====================
+
+settings.ini is now a canonical behavioral contract.
+
+Purpose:
+centralize runtime behavior
+prevent scattered hardcoded behavior
+prevent UI-opening drift
+prevent autonomous-mode inconsistencies
+
+Current canonical settings sections:
+[video]
+[identity]
+[review]
+[training]
+
+========================================================================
+REVIEW SETTINGS CONTRACT
+========================
+
+Canonical review settings:
+
+OpenReviewPage
+OpenReviewContactSheet
+ReviewSheetMaxImages
+
+review.py must consume these values from settings.ini.
+
+review.py must NOT:
+
+* hardcode automatic window opening
+* hardcode review contact sheet size
+* assume interactive review workflow
+
+Current autonomous bulk-testing default:
+OpenReviewPage = false
+OpenReviewContactSheet = false
+
+Reason:
+prevent massive window spam during large autonomous ingestion runs.
+
+========================================================================
+AUTONOMOUS MODE PHILOSOPHY
+==========================
+
+Current HBMR direction:
+observe first
+reconcile later
+
+The system now prioritizes:
+
+* uninterrupted ingestion
+* large dataset accumulation
+* provisional identity allocation
+* later cleanup/reconciliation
+
+instead of:
+
+* immediate human naming
+* blocking review workflow
+* forced certainty during ingestion
+
+========================================================================
+CURRENT CANONICAL AUTONOMOUS FLOW
+=================================
+
+video input
+-> sampled frames
+-> MegaDetector crops
+-> crop_queue insertion
+-> autoname.py assigns Bird###
+-> review_status=auto
+-> identity_status=provisional
+-> review outputs generated
+-> optional output opening via settings.ini
+-> cleanup.py reconciliation later
+
+========================================================================
+CURRENT ROLE OF REVIEW.PY
+=========================
+
+review.py is now:
+maintenance/reconciliation support
+
+NOT:
+primary human review bottleneck
+
+Current review.py responsibilities:
+
+* schema compatibility
+* legacy identity migration
+* autoname repair for blank identities
+* convert legacy new->auto review states
+* database summaries
+* latest-profile diagnostics
+* optional review output opening
+* settings-driven runtime behavior
+
+========================================================================
+CANONICAL AUTONAME MODE
+=======================
+
+Canonical provisional naming format:
+Bird001
+Bird002
+Bird003
+
+Bird identities currently represent:
+observation-cluster hypotheses
+
+NOT:
+confirmed biological truth
+
+Current normal autonomous states:
+review_status = auto
+identity_status = provisional
+
+========================================================================
+CANONICAL DRIFT WARNINGS
+========================
+
+Do not:
+
+* reintroduce blocking review prompts into main.py
+* reintroduce blocking review prompts into review.py
+* scatter Bird### allocation logic across files
+* hardcode review window opening behavior
+* hardcode review image limits outside settings.ini
+* restore individual_name/name as canonical identity state
+
+All provisional identity allocation must remain centralized in:
+autoname.py
+
+All runtime review-opening behavior must remain centralized in:
+settings.ini
+
+========================================================================
+CANON.TXT MAINTENANCE NOTE
+==========================
+
+canon.txt is intentionally becoming a high-level architectural contract document.
+
+As HBMR evolves:
+
+* remove obsolete contracts
+* collapse superseded historical sections
+* preserve only current canonical truth
+* keep derived/legacy notes minimal
+* prefer concise authoritative rules over historical accumulation
+
+Goal:
+prevent canon.txt itself from becoming drift/noise.
+
+canon.txt update | HBMR v2.5.6 DINOv2 probe layer | 2026-06-18 PDT
+
+Add this section to canon.txt:
+
+========================================================================
+DINOv2 VISUAL IDENTITY PROBE LAYER
+==================================
+
+Purpose:
+Validate whether visual embeddings can distinguish individual hummingbirds before integrating visual identity assignment into HBMR bulk ingestion.
+
+Current status:
+experimental standalone probe layer only.
+
+This layer is NOT yet part of canonical ingestion.
+This layer is NOT yet part of autonomous identity assignment.
+This layer must not modify the HBMR database yet.
+
+Canonical probe files:
+dinotest.py
+dinotest.bat
+dinosim.py
+dinosim.bat
+
+dinotest.py:
+Standalone DINOv2 single-image embedding test.
+Accepts one image crop path.
+Loads DINOv2 model.
+Computes normalized embedding.
+Prints embedding shape and norm.
+Does not write database state.
+Does not assign identity.
+
+dinotest.bat:
+Drag-and-drop launcher for dinotest.py.
+Accepts one image crop.
+Calls:
+python dinotest.py "%~1"
+
+dinosim.py:
+Standalone DINOv2 two-image similarity probe.
+Accepts exactly two image crop paths.
+Loads DINOv2 model.
+Computes normalized embeddings for both crops.
+Prints cosine similarity.
+Does not write database state.
+Does not assign identity.
+
+dinosim.bat:
+Drag-and-drop launcher for dinosim.py.
+Accepts exactly two image crops.
+Calls:
+python dinosim.py "%~1" "%~2"
+
+Canonical model:
+facebook/dinov2-small
+
+Canonical dependency group:
+torch
+torchvision
+transformers
+pillow
+
+Current validation requirement:
+Use HBMR-generated crop images, not general full-frame photos, because production identity assignment will operate on detector crops.
+
+Important:
+Existing bird photos are useful later, but they are not equivalent to HBMR crop inputs for threshold validation.
+
+Current threshold status:
+undefined.
+
+No similarity threshold is canonical yet.
+
+Reason:
+No labeled HBMR crop-pair distribution has been measured.
+
+Current validation objective:
+Generate enough HBMR crops to compare:
+same bird vs same bird
+same bird vs different bird
+bird vs false positive
+sharp crop vs blurry crop
+similar pose vs different pose
+same session vs different session
+
+Until real score distributions exist, all thresholds are speculative.
+
+Future integration target:
+visualid.py
+
+visualid.py will eventually own:
+DINOv2 model loading
+embedding generation
+embedding cache logic
+similarity comparison
+identity match decisions
+
+main.py must not directly own DINOv2 internals.
+
+Future canonical public function candidate:
+assign_identity(db_path, crop_path)
+
+Expected future return shape:
+identity
+score
+decision
+
+Decision values are not yet canonical.
+
+Important architecture rule:
+Do not bulk-process large data sets into permanent identity assignments until visual identity evidence exists and threshold behavior is understood.
+
+Current safe workflow:
+run HBMR on a moderate crop-generating batch
+use dinosim.py to collect similarity scores
+observe score distributions
+only then define match / uncertain / new-bird thresholds
+
+canon.txt update | HBMR v2.5.7 visualid.py integration boundary | 2026-06-18 PDT
+
+Add / update this section:
+
+========================================================================
+VISUAL IDENTITY MODULE
+======================
+
+New canonical module:
+visualid.py
+
+Purpose:
+Own all visual individual-recognition logic for HBMR.
+
+visualid.py is the future bridge between:
+HBMR detector crops
+and
+provisional Bird### identity assignment.
+
+Current status:
+early integration module.
+Not yet fully validated in bulk ingestion.
+
+========================================================================
+VISUALID OWNERSHIP
+==================
+
+visualid.py owns:
+
+* DINOv2 model loading
+* image crop embedding generation
+* embedding normalization
+* embedding storage
+* similarity scoring
+* visual match threshold decision
+* visual identity assignment decision
+* calling autoname.py when a new Bird### identity is needed
+
+visualid.py must hide:
+
+* torch internals
+* transformers internals
+* DINOv2 internals
+* embedding-vector implementation details
+
+Other HBMR modules must not directly load DINOv2.
+
+========================================================================
+CANONICAL VISUAL MODEL
+======================
+
+Current canonical visual embedding model:
+
+facebook/dinov2-small
+
+Current canonical internal model version label:
+
+dinov2-small-v0.1
+
+Dependencies:
+
+torch
+torchvision
+transformers
+pillow
+
+========================================================================
+CANONICAL VISUAL THRESHOLD
+==========================
+
+Starting match threshold:
+
+MATCH_THRESHOLD = 0.79
+
+Meaning:
+
+If best existing crop similarity is greater than or equal to 0.79:
+assign the new crop to the matched existing Bird### identity.
+
+If best existing crop similarity is below 0.79:
+allocate a new Bird### identity using autoname.py.
+
+Threshold philosophy:
+
+Prefer splitting identities over false merging.
+
+Reason:
+
+Split identities are easier to merge later.
+False merged identities are harder to separate later.
+
+Current threshold status:
+
+experimental starting value.
+Not final biological truth.
+Must be refined after real HBMR crop distributions accumulate.
+
+========================================================================
+VISUALID PUBLIC CONTRACT
+========================
+
+Canonical future public function:
+
+assign_identity(db_path, crop_path)
+
+Expected return dictionary:
+
+identity
+score
+decision
+threshold
+matched_crop_path
+model_name
+model_version
+
+decision values currently used:
+
+match
+new
+
+Possible future decision values:
+
+uncertain
+false_positive_candidate
+manual_review_needed
+
+main.py should consume only this normalized return dictionary.
+
+main.py must not:
+
+* compute embeddings
+* compare vectors
+* load DINOv2
+* store visual embeddings directly
+* generate Bird### identities directly when visualid.py is active
+
+========================================================================
+VISUAL EMBEDDINGS TABLE
+=======================
+
+New canonical table:
+
+visual_embeddings
+
+Current columns:
+
+id
+crop_path
+identity
+model_name
+model_version
+embedding_json
+created_at
+
+crop_path should be unique.
+
+Purpose:
+cache embeddings so HBMR does not recompute every crop every run.
+
+Important:
+Embedding cache is model-version-specific.
+If model_version changes, old embeddings must not be mixed with new embeddings.
+
+========================================================================
+AUTONAME RELATIONSHIP
+=====================
+
+visualid.py may call:
+
+allocate_bird_name(db_path)
+
+from:
+
+autoname.py
+
+Reason:
+
+autoname.py remains the sole authority for creating new Bird### names.
+
+visualid.py may decide that a new identity is needed,
+but it must not manually generate Bird### names.
+
+========================================================================
+DINOSIM RELATIONSHIP
+====================
+
+dinosim.py remains a standalone validation tool.
+
+dinosim.py is not the production identity module.
+
+dinosim.py purpose:
+bulk pairwise visual similarity exploration and threshold discovery.
+
+visualid.py purpose:
+production-facing identity assignment boundary.
+
+Do not merge dinosim.py and visualid.py.
+
+========================================================================
+CURRENT INTEGRATION RULE
+========================
+
+Safe integration order:
+
+1. Validate dinotest.py
+2. Validate dinosim.py on real HBMR crops
+3. Establish starting threshold
+4. Add visualid.py
+5. Integrate main.py only after visualid.py boundary is stable
+6. Keep review/cleanup merge tools as the safety valve for split identities
+
+Do not bulk-process large archival batches until visual identity assignment is active and producing sane results.
+
+========================================================================
+OPEN RISK
+=========
+
+DINOv2 may still confuse:
+
+* same feeder/background
+* similar crop framing
+* blur
+* gorget angle changes
+* partial birds
+* shadows / false positives
+* different birds in identical pose
+
+Therefore all Bird### assignments remain:
+
+provisional
+
+until confirmed or reconciled later.
+
+canon.txt update | HBMR v2.5.9 visual identity integration | 2026-06-18 PDT
+
+========================================================================
+MAIN.PY VISUAL IDENTITY INTEGRATION
+===================================
+
+Current canonical main.py version:
+
+main.py | HBMR v2.5.9 | 2026-06-18 PDT
+
+Major change:
+main.py no longer directly allocates every crop as a new Bird### identity.
+
+Previous behavior:
+crop detected
+-> allocate_bird_name(db_path)
+-> insert crop_queue row
+
+Current behavior:
+crop detected
+-> visualid.assign_identity(db_path, crop_path)
+-> insert crop_queue row using returned identity and visual diagnostics
+
+main.py now imports:
+
+from visualid import assign_identity
+
+main.py must NOT import:
+
+from autoname import allocate_bird_name
+
+Reason:
+autoname.py remains the Bird### allocator,
+but visualid.py now owns the decision about whether to reuse an existing identity or request a new one.
+
+========================================================================
+MAIN.PY CURRENT RESPONSIBILITIES
+================================
+
+main.py owns:
+
+* reading settings.ini
+* collecting input videos/folders
+* sampling video frames
+* calling megadetector.py on sampled frames
+* collecting newly exported crops
+* calling visualid.assign_identity(db_path, crop_path)
+* inserting crop_queue rows
+* generating review.html
+* generating current-review.jpg
+* writing per-video summary reports
+* printing run diagnostics
+
+main.py does NOT own:
+
+* DINOv2 model loading
+* visual embedding computation
+* visual embedding storage
+* cosine similarity scoring
+* visual threshold decisions
+* Bird### number allocation logic
+
+========================================================================
+VISUALID.PY CURRENT RESPONSIBILITIES
+====================================
+
+visualid.py owns:
+
+* loading facebook/dinov2-small
+* computing image embeddings from HBMR crop images
+* normalizing embeddings
+* comparing new crop embedding against stored embeddings
+* deciding match vs new
+* storing embeddings in visual_embeddings
+* calling autoname.allocate_bird_name(db_path) when a new identity is needed
+* returning normalized identity diagnostics to main.py
+
+Canonical visual model:
+
+facebook/dinov2-small
+
+Canonical model version label:
+
+dinov2-small-v0.1
+
+Canonical starting threshold:
+
+MATCH_THRESHOLD = 0.79
+
+========================================================================
+VISUALID PUBLIC CONTRACT
+========================
+
+Canonical public function:
+
+assign_identity(db_path, crop_path)
+
+Return dictionary keys:
+
+identity
+score
+decision
+threshold
+matched_crop_path
+model_name
+model_version
+
+Current decision values:
+
+match
+new
+
+Meaning:
+
+match:
+best existing embedding score >= MATCH_THRESHOLD
+
+new:
+no existing embeddings, or best score < MATCH_THRESHOLD
+
+All identities returned by visualid.py remain provisional.
+
+========================================================================
+CROP_QUEUE VISUAL DIAGNOSTICS
+=============================
+
+main.py v2.5.9 adds/maintains these crop_queue columns:
+
+visual_score
+visual_decision
+visual_threshold
+visual_matched_crop_path
+visual_model_name
+visual_model_version
+
+Purpose:
+Keep visual identity decisions inspectable after ingestion.
+
+These columns are diagnostic/provenance fields.
+They do not replace:
+
+identity
+identity_status
+review_status
+training_label
+
+Canonical autonomous insertion state remains:
+
+review_status = auto
+identity_status = provisional
+
+========================================================================
+SQLITE LOCK FIX
+===============
+
+Important implementation fix in main.py v2.5.9:
+
+main.py must not hold an open crop_queue write connection while calling visualid.assign_identity().
+
+Reason:
+visualid.py also opens/writes to the same SQLite database for visual_embeddings.
+
+Failure mode observed:
+database is locked
+
+Canonical fix:
+for each crop:
+
+1. check whether crop is already queued
+2. close that read connection
+3. call visualid.assign_identity(db_path, crop)
+4. open a fresh short-lived SQLite connection
+5. insert crop_queue row
+6. close/commit immediately
+
+Do not keep one long crop_queue write transaction open across visualid calls.
+
+========================================================================
+VISUAL_EMBEDDINGS TABLE
+=======================
+
+Canonical table owned by visualid.py:
+
+visual_embeddings
+
+Current columns:
+
+id
+crop_path
+identity
+model_name
+model_version
+embedding_json
+created_at
+
+crop_path is unique.
+
+Purpose:
+cache embeddings and preserve visual identity evidence.
+
+Important:
+Do not mix embeddings across model versions.
+If model_version changes, old embeddings are not comparable as canonical active identity evidence.
+
+========================================================================
+THRESHOLD PHILOSOPHY
+====================
+
+Starting threshold:
+
+0.79
+
+This is deliberately conservative enough to avoid obvious false merges.
+
+Preferred error mode:
+split one real bird into multiple Bird### identities
+
+rather than:
+merge multiple real birds into one Bird### identity
+
+Reason:
+splits can be merged later.
+false merges are harder to unwind.
+
+Threshold remains experimental and should be revised only after enough HBMR-generated crop evidence accumulates.
+
+========================================================================
+TESTING GUIDANCE
+================
+
+For first visualid integration tests:
+
+Delete output folder before clean test if old identity state exists.
+
+Recommended first test:
+small video batch
+known bird recurrence
+some hard crops
+some no-bird / false positive frames
+
+Watch console output:
+
+Visual ID crop: Bird001 decision=new score=no prior crops threshold=0.79
+Visual ID crop: Bird001 decision=match score=0.xxxxxx threshold=0.79
+Visual ID crop: Bird002 decision=new score=0.xxxxxx threshold=0.79
+
+Expected first-run pattern:
+first crop creates Bird001
+similar later crops may match Bird001
+visually different crops may create Bird002, Bird003, etc.
+
+Do not run large archival bulk processing until:
+database lock is resolved
+identity reuse appears sane
+review/profiles output groups by canonical identity
+false-positive behavior is understood
+
+========================================================================
+CURRENT OPEN RISKS
+==================
+
+DINOv2 may still over-match crops because of:
+
+* same feeder/background
+* same camera angle
+* similar crop framing
+* blur
+* partial bird crops
+* shadows
+* feeder hardware
+* non-bird false positives
+
+DINOv2 may also under-match the same bird because of:
+
+* gorget flash angle
+* pose changes
+* wing position
+* lighting changes
+* motion blur
+* crop padding differences
+
+Therefore all visual assignments remain provisional.
+
+========================================================================
+RELATED STANDALONE PROBES
+=========================
+
+dinotest.py:
+single-crop embedding validation
+
+dinosim.py:
+batch pairwise similarity report and threshold exploration
+
+These remain standalone validation tools.
+
+They are not production ingestion modules.
+
+visualid.py is the production-facing visual identity boundary.
+
+canon.txt update | HBMR v2.5.12 cleanupGUI crop reconciliation workspace | 2026-06-19 PDT
+
+========================================================================
+CLEANUPGUI.PY WORKSPACE TRANSITION
+==================================
+
+Current canonical cleanupGUI version:
+
+cleanupGUI.py | HBMR v2.5.12 | 2026-06-19 PDT
+
+Major architecture refinement:
+
+cleanupGUI.py remains identity-centered,
+but now supports crop-level reconciliation inside identities.
+
+Previous cleanupGUI direction:
+identity-to-identity comparison only
+
+Current direction:
+Bird### identity groups
++
+crop-level selection/reconciliation workspace
+
+Reason:
+real autonomous ingestion now produces:
+large provisional identity clusters
+(50–200 crops possible)
+
+This exposed the need for:
+identity splitting
+crop reassignment
+fine-grained reconciliation
+inside Bird### groups.
+
+========================================================================
+CURRENT CLEANUPGUI ROLE
+=======================
+
+cleanupGUI.py now owns:
+
+* Bird### identity browsing
+* identity comparison
+* crop-level reconciliation workspace
+* crop selection UI
+* split selected crops -> new Bird###
+* move selected crops -> existing Bird###
+* false-positive tagging
+* cleanup action logging
+* database backup-before-mutation
+* optional profile rebuild triggering
+
+cleanupGUI.py does NOT own:
+
+* detector logic
+* DINOv2 internals
+* embedding computation
+* Bird### allocation rules
+* profile formatting
+* MegaDetector internals
+
+========================================================================
+CURRENT GUI PHILOSOPHY
+======================
+
+Primary grouping object remains:
+Bird### identity groups
+
+Reason:
+Bird### clustering is still useful at moderate scale.
+
+However:
+Bird### identities are now explicitly treated as:
+reconcilable provisional clusters
+
+rather than:
+stable atomic identities.
+
+Human workflow is now:
+
+Bird### cluster
+-> inspect crops visually
+-> compare identities
+-> split/move crops as needed
+-> later converge toward cleaner identities
+
+========================================================================
+NEW CROP WORKSPACE MODEL
+========================
+
+cleanupGUI.py now supports:
+
+open identity
+-> large scrollable crop grid
+-> crop-level selection
+-> crop-level actions
+
+Canonical crop workspace features:
+
+* filename visibility under thumbnails
+* visual_score visibility
+* visual_decision visibility
+* identity_status visibility
+* multi-selection
+* select-all
+* clear-selection
+* scrollable large identity inspection
+
+Reason:
+users may already encode identity hints in filenames/video names.
+
+Filename visibility is now considered:
+important reconciliation evidence.
+
+========================================================================
+NEW CLEANUP ACTIONS
+===================
+
+cleanupGUI.py now supports:
+
+split_selected_to_new_identity
+
+Behavior:
+selected crop rows
+-> allocate new Bird### through:
+autoname.allocate_bird_name(db_path)
+-> move selected crops
+-> preserve provisional/autonomous state
+
+Canonical updated fields:
+
+identity = new Bird###
+identity_status = provisional
+review_status = auto
+
+========================================================================
+MOVE SELECTED CROPS
+===================
+
+cleanupGUI.py now supports:
+
+move_selected_to_existing_identity
+
+Behavior:
+selected crops reassigned from:
+source Bird###
+to:
+existing target Bird###
+
+Important:
+visual_embeddings identity values should also be updated
+when crop identity changes.
+
+Reason:
+embedding cache identity drift would otherwise accumulate.
+
+========================================================================
+FALSE POSITIVE WORKFLOW
+=======================
+
+cleanupGUI.py now supports:
+
+mark_selected_crops_false_positive
+
+and
+
+mark_identity_false_positive
+
+Canonical behavior:
+
+identity_status = false_positive
+
+False positives remain preserved as training evidence.
+
+Optional fields supported:
+
+training_label
+cleanup_notes
+
+========================================================================
+VISUAL EMBEDDINGS CONSISTENCY
+=============================
+
+When cleanupGUI.py changes crop identity assignments:
+
+visual_embeddings.identity
+should also be updated where possible.
+
+Reason:
+visual embedding cache is now part of identity evidence provenance.
+
+Failure to synchronize:
+would create identity drift between:
+
+crop_queue
+and
+visual_embeddings
+
+========================================================================
+IMPORTANT AUTONAME CONTRACT
+===========================
+
+cleanupGUI.py may create new Bird### identities ONLY through:
+
+autoname.allocate_bird_name(db_path)
+
+cleanupGUI.py must NOT:
+
+* guess next Bird###
+* manually increment Bird numbers
+* generate Bird### locally
+* create alternate provisional naming schemes
+
+Reason:
+all Bird### allocation remains centralized in:
+autoname.py
+
+========================================================================
+IDENTITY PHILOSOPHY REFINEMENT
+==============================
+
+Observed issue:
+
+single-pass nearest-neighbor visual assignment
+can create broad mixed clusters.
+
+Possible failure mode:
+
+A matches B
+B matches C
+therefore:
+A indirectly merges with C
+
+even if:
+A and C are poor matches.
+
+This can create:
+large mixed Bird### groups.
+
+Therefore:
+Bird### identities remain explicitly provisional.
+
+========================================================================
+CURRENT OPEN RISK
+=================
+
+MATCH_THRESHOLD = 0.79
+may still permit over-merging.
+
+Current likely future directions:
+
+* higher threshold
+* uncertain band
+* multiple representatives per identity
+* cluster-consistency checks
+* second-pass clustering
+* identity confidence scoring
+* intra-identity similarity sorting
+
+Current cleanupGUI workspace is intended to become:
+the human reconciliation safety valve
+for these experimental identity systems.
+
+========================================================================
+CURRENT CLEANUPGUI DESIGN DIRECTION
+===================================
+
+cleanupGUI.py is evolving into:
+
+identity reconciliation workbench
+
+rather than:
+simple maintenance utility.
+
+The GUI is now considered:
+core HBMR architecture,
+not optional tooling.
+
+========================================================================
+IMPORTANT CANONICAL RULES
+=========================
+
+Canonical identity field:
+crop_queue.identity
+
+Do NOT restore:
+individual_name
+name
+
+as primary identity state.
+
+Canonical autonomous normal state:
+
+review_status = auto
+identity_status = provisional
+
+Canonical false-positive state:
+
+identity_status = false_positive
+
+Canonical Bird### allocation authority:
+
+autoname.py
+
+========================================================================
+CURRENT PRIORITY ORDER
+======================
+
+1. improve cleanupGUI reconciliation workflow
+2. reduce false merges
+3. stabilize visual identity integrity
+4. only then:
+   multibird/copresence/community graph analysis
+
+Reason:
+mixed identities would poison downstream social inference.
+
+canon.txt | HBMR v2.5.14 | 2026-06-20 PDT
+
+cleanupGUI.py v2.5.14 canonical responsibilities:
+
+* crop-level identity reconciliation workspace
+* Bird### provisional cluster inspection
+* multibird workspace browsing
+* low-quality evidence tagging
+* false-positive tagging
+* junk crop archive/delete workflow
+* visual_embeddings identity synchronization during crop reassignment
+* cleanup action logging
+* DB backup-before-mutation behavior
+
+Current canonical identity_status values:
+
+* provisional
+* false_positive
+* multibird
+* low_quality
+
+Current canonical multibird behavior:
+
+* multibird crops are preserved evidence
+* multibird crops are NOT treated as junk
+* multibird crops are browsable through dedicated left-side workspace group:
+  [MULTIBIRD CROPS]
+* multibird crops may later support many-to-many identity assignment
+* cleanupGUI.py currently supports tagging/isolation only
+* full relational identity logic intentionally deferred
+
+Current canonical low_quality behavior:
+
+* low_quality crops are preserved evidence
+* low_quality is distinct from junk
+* low_quality crops remain in crop_queue
+* low_quality crops remain visually browsable/searchable
+
+Current canonical junk workflow:
+
+* selected junk crops are archived before removal
+* archived junk image path:
+  output/junk-crops/
+* cleanupGUI.py removes junk rows from:
+  crop_queue
+* cleanupGUI.py also removes matching rows from:
+  visual_embeddings
+* cleanupGUI.py preserves:
+  DB backup
+  cleanup action log
+
+Current canonical public-facing naming direction:
+
+* internal stable filenames preserved:
+  cleanupGUI.py
+  cleanupGUI.bat
+* future public-facing GUI naming goal:
+  Identifier GUI
+* defer broad naming migration until coordinated pre-beta naming pass
+
+Current canonical architecture direction:
+HBMR currently prioritizes:
+
+* individual identity reconciliation
+  over:
+* species classification
+
+Current canonical future schema direction:
+Future detector pipeline likely preserves:
+
+* bbox_x1
+* bbox_y1
+* bbox_x2
+* bbox_y2
+* bbox_confidence
+* frame_path
+* frame_time_seconds
+* source_frame_index
+
+Reason:
+future multibird relational reconstruction requires preserved geometry/frame metadata.
+
+canon.txt update | HBMR v3.1.9 provisional identity allocator expansion | 2026-06-23 PDT
+
+========================================================================
+PROVISIONAL IDENTITY FORMAT MIGRATION
+=====================================
+
+Canonical provisional identity family:
+Bird####
+
+Important:
+
+#### is a fixed-width base-36 token, not decimal-only.
+
+Allowed token characters:
+0-9
+A-Z
+
+Canonical examples:
+Bird0001
+Bird0002
+Bird000A
+Bird000Z
+Bird0010
+Bird00ZZ
+BirdZZZZ
+
+Maximum canonical four-character base-36 range:
+Bird0001 -> BirdZZZZ
+
+Approximate capacity:
+1,679,615 provisional identities
+
+Reason:
+Decimal Bird0001 -> Bird9999 is not sufficient for power users,
+large archival ingestion,
+multibird footage,
+or future ML workflows requiring very large datasets.
+
+========================================================================
+LEGACY COMPATIBILITY
+====================
+
+Legacy Bird### identities remain valid:
+
+Bird001
+Bird002
+...
+Bird999
+
+Legacy identities must NOT be broken by the migration.
+
+New allocator output should use:
+Bird####
+
+Existing legacy identities should be recognized by all readers,
+filters,
+profile generators,
+GUI selectors,
+and migration utilities.
+
+========================================================================
+ALLOCATOR AUTHORITY
+===================
+
+autoname.py remains the sole authority for provisional identity creation.
+
+No module may:
+
+* generate Bird IDs directly
+* assume decimal-only numbering
+* assume exactly 3 digits
+* assume exactly 4 decimal digits
+* manually increment identity strings
+* create alternate rollover formats
+
+All provisional identity creation must flow through:
+
+allocate_bird_name(db_path)
+
+========================================================================
+SORTING RULE
+============
+
+Bird IDs must be sorted by decoded base-36 numeric value,
+not raw string order,
+when identity order matters.
+
+Reason:
+fixed-width Bird#### IDs sort safely lexicographically,
+but legacy Bird### and Bird#### mixed datasets require explicit normalized sorting.
+
+========================================================================
+REGEX / PARSER RULE
+===================
+
+Canonical parser must accept:
+
+Bird[0-9]{3}
+Bird[0-9A-Z]{4}
+
+But new allocator must only emit:
+
+Bird[0-9A-Z]{4}
+
+========================================================================
+MIGRATION STRATEGY
+==================
+
+Recommended migration:
+preserve existing Bird### identities,
+but switch all new allocation to Bird#### base-36.
+
+Do not perform destructive renaming until schema and GUI workflows are stable.
+
+Future optional migration:
+one-time canonical rewrite of legacy Bird### to Bird#### equivalents,
+only after profiles,
+cleanupGUI,
+visual_embeddings,
+reports,
+and canon are validated.
+
+========================================================================
+FILES TO AUDIT
+==============
+
+autoname.py
+visualid.py
+cleanupGUI.py
+profiles.py
+main.py
+review.py
+canon.txt
+
+Audit targets:
+
+* Bird### regex assumptions
+* exactly-3-digit assumptions
+* decimal-only parsing
+* lexicographic sorting
+* profile grouping
+* visual_embeddings identity sync
+* report generation
+* dropdown ordering
+* identity filters
+* filesystem-safe identity paths
+
+canon.txt update | HBMR / Birdbill v3.1.9 Bird##### identity migration | 2026-06-23 PDT
+
+========================================================================
+PROVISIONAL IDENTITY FORMAT MIGRATION
+=====================================
+
+Canonical provisional identity format is now:
+
+Bird#####
+
+Examples:
+
+Bird00001
+Bird00002
+Bird00010
+Bird00100
+Bird99999
+
+Canonical range:
+
+Bird00001 -> Bird99999
+
+Reason:
+Birdbill may need to support power users,
+large archives,
+multibird-heavy footage,
+and ML workflows that only become useful with very large datasets.
+
+Bird##### provides roughly 100k readable provisional identity slots
+without introducing alphanumeric or hex parsing complexity.
+
+========================================================================
+AUTONAME CONTRACT
+=================
+
+Canonical allocator module remains:
+
+autoname.py
+
+Current canonical replacement:
+
+autoname.py | HBMR / Birdbill v3.1.9 | 2026-06-23 PDT
+
+autoname.py owns:
+
+* provisional Bird##### allocation
+* Bird##### validation
+* Bird##### numeric parsing
+* Bird-aware sort keys
+* formatting integer numbers into canonical Bird##### labels
+
+Canonical emitted format:
+
+Bird00001
+
+Canonical helper functions:
+
+allocate_bird_name(db_path)
+format_bird_name(number)
+is_autoname(identity)
+autoname_number(identity)
+autoname_sort_key(identity)
+
+No other module may:
+
+* generate Bird IDs directly
+* manually increment Bird IDs
+* assume Bird### format
+* assume Bird#### format
+* create alphanumeric rollover systems
+* create alternate provisional naming systems
+
+========================================================================
+LEGACY STRATEGY
+===============
+
+Current project decision:
+
+The existing Bird### database/profile era is not sacred canonical state.
+
+The user has retained source footage and may regenerate HBMR/Birdbill outputs
+from source videos after the v3.1.9 migration.
+
+Therefore:
+do not over-engineer permanent mixed Bird### / Bird##### support.
+
+Short-term historical archives may contain Bird### identities,
+but the active fresh-run system should emit Bird##### only.
+
+========================================================================
+VISUALID CONTRACT
+=================
+
+visualid.py remains the production visual identity boundary.
+
+visualid.py does not generate Bird IDs directly.
+
+visualid.py calls:
+
+autoname.allocate_bird_name(db_path)
+
+when visual matching decides a new provisional identity is needed.
+
+Because of the autoname.py migration,
+new visual identity assignments now receive Bird##### labels automatically.
+
+visual_embeddings.identity must store the same identity string assigned to crop_queue.identity.
+
+========================================================================
+MAIN.PY CONTRACT
+================
+
+main.py remains unchanged for this migration unless later version/header cleanup is desired.
+
+main.py calls:
+
+visualid.assign_identity(db_path, crop_path)
+
+and writes the returned identity into:
+
+crop_queue.identity
+
+main.py must not import autoname.py directly
+while visualid.py owns identity assignment decisions.
+
+========================================================================
+CLEANUPGUI CONTRACT
+===================
+
+Current canonical replacement:
+
+cleanupGUI-v3.1.9.py | HBMR / Birdbill v3.1.9 | 2026-06-23 PDT
+
+cleanupGUI.py now treats Bird##### as the canonical provisional identity format.
+
+cleanupGUI.py imports:
+
+autoname_sort_key
+
+from:
+
+autoname.py
+
+Reason:
+identity display and dropdown ordering must use Bird-aware sorting
+instead of raw string sorting wherever identities are displayed.
+
+cleanupGUI.py may create new provisional identities only through:
+
+allocate_bird_name(db_path)
+
+cleanupGUI.py must not locally generate Bird IDs.
+
+========================================================================
+MANUAL SORTING REFINEMENT
+=========================
+
+Manual Sorting remains a core identity workspace.
+
+v3.1.9 hotkey/category correction:
+
+J = junk
+F = false positive
+
+Reason:
+junk and false positives must remain separate dataset categories.
+
+Junk:
+poor-quality but real bird-related material.
+
+False positive:
+non-bird detector output.
+
+This distinction is important for:
+dataset integrity,
+future detector filtering,
+hard-example evaluation,
+and false-positive training workflows.
+
+========================================================================
+PROFILES CONTRACT
+=================
+
+Current canonical replacement:
+
+profiles.py | HBMR / Birdbill v3.1.9 | 2026-06-23 PDT
+
+profiles.py now imports:
+
+autoname_sort_key
+
+from:
+
+autoname.py
+
+Reason:
+profile index ordering must respect Bird##### numeric ordering.
+
+profiles.py should not generate Bird IDs.
+
+profiles.py should treat profile outputs as derived/rebuildable state.
+
+Current profile generation should exclude rows marked as:
+
+identity_status = false_positive
+identity_status = junk
+identity_status = low_quality
+
+Reason:
+profile pages should represent active/provisional real-bird identity evidence,
+not detector failures or rejected quality buckets.
+
+========================================================================
+STORAGE / DERIVED STATE WARNING
+===============================
+
+Observed during v3.1.9 archiving:
+
+output/frames can balloon quickly.
+Example:
+sampled frames reached about 2 GB
+while crops reached about 500 MB
+with only part of the archive processed.
+
+Current architecture interpretation:
+
+crops:
+longer-term identity evidence
+
+sampled frames:
+derived/cache/intermediate state
+
+Future beta/testing requirement:
+warn beta users that frame storage can grow quickly.
+
+Future architecture goal:
+add frame retention controls,
+cleanup options,
+compression settings,
+or temporary-frame mode.
+
+Potential future policy:
+delete sampled frames after crops are generated,
+unless the user enables frame retention for debugging.
+
+========================================================================
+UNDO / BACKUP STORAGE WARNING
+=============================
+
+Current cleanupGUI backup behavior is safe but storage-heavy.
+
+Observed risk:
+manual sorting 100 crops may create 100 full database backups.
+
+Current DB example:
+about 14 MB,
+but expected to grow substantially with real usage.
+
+Near-term:
+acceptable during development and debugging.
+
+Before bulk Identity Lab / Manual Sorting workflows:
+replace backup-per-action behavior with a more efficient undo model.
+
+Recommended future model:
+
+session backup
++
+reversible action log
++
+optional periodic snapshots
++
+backup retention pruning
+
+Do not rely on one full DB copy per manual sorting keystroke
+for large-scale workflows.
+
+========================================================================
+LONG-TERM IDENTITY ROADMAP
+==========================
+
+Bird##### is the current readable provisional identity label system.
+
+Long-term, if Birdbill scales beyond human-readable provisional labels,
+consider UUID-backed internal identity entities.
+
+Future possible architecture:
+
+internal_identity_id = UUID
+display_label = Bird##### or True Name
+aliases = historical names / merged names
+identity graph edges = merge/split/co-occurrence/evidence relationships
+
+Do not implement UUID identity architecture yet.
+
+Keep it as a long-term scaling goal after the curation system stabilizes.
+
+canon.txt update | HBMR / Birdbill MMPose pose-localization architecture pass | 2026-06-25 PDT
+
+========================================================================
+NEW STANDALONE MODULE
+
+Canonical filename:
+mmposeGUI.py
+
+Canonical launcher:
+mmpose.bat
+
+Canonical working directory:
+D:\HBMR\mmpose\
+
+Purpose:
+Standalone pose-estimation debugging/prototyping environment for Birdbill AutoRefine development.
+
+Important:
+mmposeGUI.py is intentionally isolated from cleanupGUI.py and HBMR database writes during early experimentation.
+
+Current role:
+
+* pose localization testing
+* keypoint interpretation
+* anatomical evidence exploration
+* AutoRefine feasibility validation
+* pose visualization/debugging
+
+========================================================================
+CURRENT MMPose ENVIRONMENT CONTRACT
+
+Canonical environment:
+openmmlab
+
+Current validated interpreter example:
+C:\Users\autom\miniconda3\envs\openmmlab\python.exe
+
+Important architecture rule:
+Do NOT rely on ambiguous global `python` resolution.
+
+Use explicit interpreter paths for:
+
+* MMPose
+* OpenMMLab
+* future ML sub-environments
+
+Reason:
+global Python 3.14 repeatedly conflicted with conda environments and OpenMMLab tooling.
+
+========================================================================
+CURRENT VALIDATED OPENMMLAB STACK
+
+Current validated stack:
+
+* Python 3.8
+* torch 2.4.1+cpu
+* mmpose functional
+* mmcv functional
+* mmdet==3.0.0 required
+
+Important:
+mmdet>=3 installed incompatible 3.3.0 during testing.
+
+Current canonical pin:
+mmdet==3.0.0
+
+OpenMMLab stack is version-fragile.
+Future validated versions should be explicitly documented once stabilized.
+
+========================================================================
+CURRENT MODEL CONTRACT
+
+Current tested model family:
+RTMPose
+
+Current tested dataset/schema:
+AP-10K animal pose
+
+Current tested checkpoint:
+rtmpose-m_simcc-ap10k_pt-aic-coco_210e-256x256-7a041aa1_20230206.pth
+
+Current tested config:
+rtmpose-m_8xb64-210e_ap10k-256x256.py
+
+Canonical model folder:
+D:\HBMR\mmpose\models\
+
+========================================================================
+CURRENT OUTPUT CONTRACTS
+
+Canonical output folder:
+D:\HBMR\mmpose\output\
+
+Current generated outputs:
+
+* visuals\
+* mmpose-report.html
+* mmpose-predictions.json
+* mmpose-predictions.csv
+
+Important architecture rule:
+pose/debug outputs are derived experimental artifacts and should remain isolated from core HBMR identity database tables until schema stabilizes.
+
+========================================================================
+CURRENT AP-10K INTERPRETATION LAYER
+
+Current architecture:
+Birdbill reinterprets AP-10K mammal keypoints into hummingbird-oriented anatomical proxies.
+
+Current likely useful mappings:
+0/1 = head anchors
+2 = bill-head front anchor
+3 = neck/gorget proxy
+4 = tail base
+5/8 = wing roots
+11/14 = rear-body anchors
+
+Important:
+semantic biological correctness is NOT currently required.
+
+Current requirement:
+stable repeatable anatomical localization sufficient for:
+
+* AutoRefine
+* evidence cropping
+* comparison stabilization
+* future fusion scoring
+
+========================================================================
+CURRENT AUTOREFINE CONTRACT DIRECTION
+
+Current intended conceptual flow:
+
+raw crop
+→ pose inference
+→ Birdbill reinterpretation layer
+→ anatomical evidence extraction
+→ refined evidence crops
+
+Likely future derived evidence crops:
+
+* bill crop
+* head crop
+* body crop
+* gorget crop
+* wing-root crop
+* tail-base crop
+* body-tight crop
+* background-suppressed crop
+
+Important:
+raw detector crop remains canonical evidence artifact.
+Refined crops are derived artifacts.
+
+========================================================================
+CURRENT ARCHITECTURE LESSON
+
+Major validated realization:
+pose localization first,
+re-ID second.
+
+Current successful observation:
+existing animal-pose priors already localize hummingbird anatomy meaningfully without hummingbird-specific training.
+
+This strongly shifts architecture direction away from:
+blind crop heuristics
+and toward:
+pose-aware AutoRefine infrastructure.
+
+canon.txt supplemental update | Birdbill ML modularization + contextual metadata | 2026-06-26 PDT
+
+========================================================================
+NEW STANDALONE MODULES
+
+Current preferred architecture:
+experimental ML/debug systems remain standalone before integration into cleanupGUI.py / Identity Lab.
+
+New standalone modules:
+
+mmposeGUI.py
+Purpose:
+pose localization debugging and anatomical reinterpretation.
+
+autorefineGUI.py
+Purpose:
+derive anatomical evidence crops from MMPose localization.
+
+autosortGUI.py
+Purpose:
+candidate same-bird ranking using local verification systems.
+
+billtipTrainerGUI.py
+Purpose:
+human-supervised bill-tip training data generation.
+
+HBMRlauncherGUI.py
+Purpose:
+archive-context launch configuration and batch metadata injection.
+
+========================================================================
+MMPose / AUTOREFINE CONTRACTS
+
+Current Birdbill reinterpretation priorities:
+
+* head
+* throat/gorget
+* body
+* tail
+
+Current output folders:
+
+output/autorefine/head/
+output/autorefine/throat/
+output/autorefine/body/
+output/autorefine/tail/
+output/autorefine/visuals/
+
+Current architecture rule:
+AutoRefine produces evidence crops intended for downstream local verification systems such as LightGlue.
+
+Current design philosophy:
+AutoRefine quality strongly affects AutoSort quality.
+
+========================================================================
+BILL TIP TERMINOLOGY CONTRACT
+
+Current preferred terminology:
+
+bill_base
+derived_bill_tip
+bill_tip_candidate
+bill_tip_verified
+
+Important:
+Do NOT represent derived bill tip as a native MMPose keypoint.
+
+Reason:
+MMPose currently only provides stable bill-base/nose localization.
+
+Bill-tip estimation is currently:
+Birdbill-derived inference.
+
+========================================================================
+AUTOSORT CONTRACTS
+
+Current AutoSort philosophy:
+AutoSort proposes candidate same-bird matches.
+It does NOT assign final identities.
+
+Preferred modes:
+
+* all-vs-all
+* cross-video only
+* query folder vs reference folder
+
+Preferred filters:
+
+* skip same source
+* skip nearby timestamps
+* top-N candidate ranking
+
+Current preferred downstream architecture:
+modular scorer ecosystem.
+
+Potential scorer modules:
+
+* LightGlue
+* LoFTR
+* color/gorget
+* body proportions
+* temporal continuity
+* fusion scoring
+
+========================================================================
+KNOWN PROFILE LIBRARY CONCEPT
+
+Current preferred Birdbill testing strategy:
+build curated known-profile libraries before processing massive archives.
+
+Preferred structure example:
+
+Bird00012/
+head_gorget/
+bill_side/
+wing_side/
+tail_spread/
+body_general/
+
+Important realization:
+not all crops contain useful identity evidence.
+
+========================================================================
+IDENTITY EVIDENCE TERMINOLOGY
+
+Current preferred identity evidence concepts:
+
+bill_length_signal
+wing_length_signal
+gorget_signal
+tail_signal
+side_view_quality
+head_visibility
+overall_identity_value
+
+Important:
+Birdbill should increasingly evaluate:
+identity evidence quality,
+not merely:
+bird presence.
+
+========================================================================
+BILL TIP TRAINING ARCHITECTURE
+
+Current preferred future strategy:
+human-supervised bill-tip refinement.
+
+Current billtipTrainerGUI.py workflow:
+
+* MMPose Nose used as bill_base
+* candidate bill-tip hypotheses generated
+* human clicks verified bill tip
+* CSV/JSON training data exported
+
+Important realization:
+bill length stability across frames may become a powerful validation constraint.
+
+========================================================================
+HBMR MAIN.PY CONTRACT UPDATE
+
+main.py updated through:
+v2.5.11
+
+Current supported input-tagging behavior:
+
+* append -HBMR to processed input videos
+* prevent duplicate tags
+* already-tagged videos still re-process
+
+Current preferred terminology:
+processed_input_tag = -HBMR
+
+========================================================================
+ARCHIVE CONTEXT / HUMAN CONTEXT CONTRACTS
+
+Current archive-context metadata fields:
+
+archive_context
+human_present
+hand_present
+human_contact_type
+friendship_score_delta
+friendship_reason
+
+Important conceptual separation:
+human-context metadata is NOT identity evidence.
+
+Current intended use:
+behavioral/contextual interpretation.
+
+========================================================================
+CURRENT ARCHIVE CONTEXT EXAMPLES
+
+finger_landing
+birdbath
+miss
+unknown
+
+Current preferred near-term behavior:
+archive-level contextual tagging is acceptable before frame-level hand detection exists.
+
+========================================================================
+HUMAN / HAND DETECTION DIRECTION
+
+Current future concepts:
+
+* hand detection
+* finger perch scoring
+* hand-pose analysis
+* friendship metrics
+* perch preference
+* feeding behavior
+
+Potential future modules:
+humancontextGUI.py
+
+Important:
+Do NOT allow hand/finger presence to become a shortcut identity signal.
+
+========================================================================
+ENVIRONMENT CONTRACTS
+
+Current preferred environment separation:
+
+hbmr-env
+
+* Birdbill runtime
+* LightGlue
+* DINO
+* AutoSort
+* core utilities
+
+openmmlab-env
+
+* MMPose
+* mmcv
+* mmdet
+* OpenMMLab stack
+
+Reason:
+OpenMMLab dependency fragility is significantly higher.
+
+Current rule:
+use explicit interpreter paths for all external module launches.
+
+========================================================================
+CURRENT MAJOR ARCHITECTURE REALIZATION
+
+Birdbill is transitioning from:
+global crop similarity
+
+toward:
+pose-aware localized biological evidence reconstruction.
+
+Current strongest operational pipeline:
+
+video
+→ MegaDetector crops
+→ MMPose localization
+→ AutoRefine evidence crops
+→ LightGlue local verification
+→ candidate ranking
+→ human reconciliation

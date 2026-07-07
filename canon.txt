@@ -1,0 +1,1226 @@
+canon.txt | HBMR / Birdbill v3.2.0 | 2026-07-02 PDT | Consolidated Canon for Smoke-Test-First Rebuild Phase
+
+========================================================================
+PROJECT IDENTITY
+================
+
+Canonical user-facing project name:
+Birdbill
+
+Historical / root project name:
+HBMR
+
+Current project root:
+D:\HBMR
+
+Canonical top-level launcher:
+HBMR.bat
+
+Current development phase:
+smoke-test-first rebuild planning
+
+Current operating rule:
+Do not immediately begin a large rewrite. First smoke-test current modules with low human workload, decide keep / repair / retire / rebuild status, then plan the new architecture before any code-heavy rewrite begins.
+
+Important document rule:
+When reviewing or updating canon.txt, coding notes, project summaries, or other project documents, use the user-provided current version as source of truth. Do not substitute remembered, searched, or older versions unless the user explicitly asks for recovery/search.
+
+========================================================================
+HIGH-LEVEL ARCHITECTURE DIRECTION
+=================================
+
+Birdbill is transitioning from:
+global crop similarity and ad hoc module outputs
+
+toward:
+pose-aware localized biological evidence reconstruction.
+
+Current strongest conceptual pipeline:
+
+source video
+→ sampled frames
+→ MegaDetector bird crops
+→ broad pose/keypoint scaffold
+→ DLC billtip precision keypoints
+→ labeled observation record
+→ AutoRefine anatomical evidence crops
+→ biometrics / local verification / candidate ranking
+→ Identity Lab reconciliation
+→ profiles and derived reports
+
+Core principle:
+observe first, reconcile later.
+
+The system should support large autonomous ingestion while preserving uncertainty. Human work should be used mainly for correction, validation, reconciliation, and debugging, not as a blocking default workflow.
+
+========================================================================
+NEXT PHASE: SMOKE TESTING BEFORE REWRITE
+========================================
+
+Next working phase:
+smoke-test current modules and map keep / repair / retire / rebuild status.
+
+Smoke tests should record:
+
+* exact file/script path
+* exact Python interpreter/environment
+* minimal command
+* input folder/file
+* expected output
+* actual output
+* output folder
+* database mutation yes/no
+* status: keep / repair / retire / rebuild
+
+PowerShell discipline:
+
+* do not invent test folders or paths
+* use agreed variables such as $py, $config, $testdir, $script, $outdir
+* print variables before executing
+* run Test-Path before executing
+* avoid $input because it is a PowerShell automatic variable
+
+Known DLC unseen-crop test folder:
+D:\HBMR\output\crops-DLC test1
+
+Smoke-test goal:
+not exhaustive debugging. The goal is to determine which existing parts are usable enough to preserve and which parts should be rewritten around cleaner contracts.
+
+========================================================================
+STORAGE DISCIPLINE
+==================
+
+Storage discipline is now a major rebuild driver.
+
+Observed problem:
+output\crops ballooned to roughly 24k images and about 10 GB with only limited input processed.
+
+Architectural conclusion:
+output\crops currently does too many jobs:
+detector evidence, debug output, training data, profile evidence, processing cache, duplicate archive, and possible durable evidence.
+
+Future architecture must separate:
+
+* source media
+* sampled-frame cache
+* detector crop cache
+* durable evidence crops
+* refined evidence crops
+* training data
+* debug outputs
+* reports
+* derived profile exports
+
+Canonical truth:
+source media is the canonical recoverable truth.
+
+Derived/cache state:
+sampled frames and temporary crops.
+
+Durable evidence:
+selected crops, refined evidence crops, validated profile evidence, BirdImager captures, and biometrics-ready outputs.
+
+Future requirement:
+do not keep every generated crop/frame forever by default.
+
+Potential retention policy:
+delete sampled frames after crop generation unless frame retention is enabled for debugging.
+
+========================================================================
+ENVIRONMENT CONTRACTS
+=====================
+
+Use explicit interpreter paths for ML/module subprocesses.
+
+Do not rely on ambiguous global python resolution for fragile environments.
+
+Known environment separation:
+
+hbmr-env:
+Birdbill runtime, core utilities, DINO/visualid, LightGlue, AutoSort, general Python modules.
+
+openmmlab / openmmlab-env:
+MMPose, mmcv, mmdet, OpenMMLab stack.
+
+DLC environment:
+DLC billtip inference/training environment. Exact interpreter/config path must be confirmed during smoke testing and then documented here.
+
+Known MMPose validated environment example:
+C:\Users\autom\miniconda3\envs\openmmlab\python.exe
+
+Known MMPose stack:
+Python 3.8
+torch 2.4.1+cpu
+mmpose functional
+mmcv functional
+mmdet==3.0.0 required
+
+Important:
+OpenMMLab stack is version-fragile. Pin versions and document validated combinations.
+
+========================================================================
+SETTINGS CONTRACT
+=================
+
+Canonical settings file:
+settings.ini
+
+settings.ini owns user-editable runtime configuration.
+
+Current important sections:
+
+[video]
+[identity]
+[review]
+[training]
+
+Known video keys:
+
+sample_every_seconds
+max_frames_per_video
+jpeg_quality
+clear_old_sampled_frames
+
+Known review keys:
+
+OpenReviewPage
+OpenReviewContactSheet
+ReviewSheetMaxImages
+
+Autonomous bulk-testing default:
+
+OpenReviewPage = false
+OpenReviewContactSheet = false
+
+Reason:
+avoid review-window spam during autonomous ingestion.
+
+Do not rename settings keys without updating all consumers.
+
+========================================================================
+DATABASE CONTRACT
+=================
+
+Canonical current database:
+output\database\mr-review.db
+
+Canonical current primary table:
+crop_queue
+
+crop_queue is the central crop/evidence queue for current legacy-to-vNext work.
+
+Canonical identity field:
+identity
+
+Legacy/non-canonical identity fields:
+individual_name
+name
+
+Do not restore individual_name or name as primary identity state.
+
+Current autonomous normal state:
+
+review_status = auto
+identity_status = provisional
+
+Canonical / recognized review_status values:
+
+new
+auto
+reviewed
+skipped
+
+Canonical / recognized identity_status values:
+
+provisional
+active
+false_positive
+multibird
+low_quality
+
+Junk behavior:
+junk crops are archived and removed from crop_queue rather than preserved as normal profile evidence.
+
+Important future schema direction:
+future detector/evidence records should preserve geometry and source metadata, including:
+
+source_video
+frame_path
+source_frame_index
+frame_time_seconds
+timestamp / synced timestamp where applicable
+crop_path
+detector bbox x1/y1/x2/y2
+detector confidence
+crop-to-frame transform
+
+Reason:
+future multibird, biometrics, BirdImager, and triangulation work require geometry and source provenance.
+
+========================================================================
+LABELED OBSERVATION RECORD
+==========================
+
+The labeled observation record is the central vNext architecture concept.
+
+It should preserve:
+
+* source video
+* source frame or timestamp
+* frame path
+* detector box
+* detector confidence
+* crop path
+* crop-to-frame transform
+* MMPose keypoints
+* DLC billtip keypoints
+* model names/versions
+* model confidences/likelihoods
+* derived bill vector
+* bill length in pixels
+* pose-quality flags
+* measurement eligibility flags
+* identity/profile links
+* evidence crop links
+* optional synced_time_ms for future dual-camera workflows
+
+Consumers should use labeled observations rather than each module inventing a separate incompatible output structure.
+
+Primary consumers:
+
+AutoRefine
+biometrics
+AutoSort
+Identity Lab
+profiles
+BirdImager/Bird3D
+reports
+
+========================================================================
+MEGADETECTOR CONTRACT
+=====================
+
+Canonical module:
+megadetector.py
+
+Owns:
+
+* MegaDetector model loading
+* local detector model path
+* raw detector call
+* detector confidence/class filtering
+* bounding-box normalization
+* crop padding
+* animal crop export
+
+Canonical model family:
+MDV6 YOLOv9c
+
+Canonical local model file:
+models\MDV6b-yolov9-c.pt
+
+Canonical output folder in current legacy architecture:
+output\crops
+
+Canonical normalized detection fields:
+
+class_name
+class_id
+confidence
+x1
+y1
+x2
+y2
+
+Important boundary:
+Other Birdbill modules should consume normalized detection/crop outputs, not PytorchWildlife raw detector objects.
+
+Current role in DLC chain:
+MegaDetector/crop filtering owns whether a crop contains a usable bird. DLC does not detect birds.
+
+========================================================================
+DLC BILLTIP CONTRACT
+====================
+
+DLC billtip is now validated enough to treat as a real Birdbill evidence source.
+
+Validated evidence chain:
+
+source video/frame
+→ MegaDetector bird crop
+→ DLC bill_base / bill_tip
+→ bill vector
+→ bill length in pixels
+→ bill-side evidence crop
+→ AutoRefine / biometrics / profile evidence
+
+Current DLC keypoint meanings:
+
+bill_base
+bill_tip
+
+DLC owns:
+precise bill_base and bill_tip localization on usable bird crops.
+
+MegaDetector owns:
+whether the crop exists and whether the crop contains a usable bird.
+
+Current rule:
+freeze the validated two-point DLC billtip model as a specialist asset.
+
+Do not casually expand this model in-place.
+
+If body/wing landmarks are pursued later:
+define a careful landmark contract first and likely create a separate DLC project such as birdpose or bodywing.
+
+Reason:
+billtip is now a known-good specialist branch and should not be destabilized by broader ambiguous labeling.
+
+DLC and MMPose are complementary, not competitors.
+
+MMPose:
+broad scaffold and anatomical localization.
+
+DLC billtip:
+precision specialist for bill_base, bill_tip, bill vector, bill-side crop, and bill-length evidence.
+
+Future integrated flow:
+
+detector crop
+→ MMPose broad pose
+→ DLC billtip
+→ merged labeled observation
+→ AutoRefine evidence crops
+→ biometrics when valid
+
+========================================================================
+MMPose CONTRACT
+===============
+
+Canonical standalone module:
+mmposeGUI.py
+
+Canonical launcher:
+mmpose.bat
+
+Canonical working directory:
+D:\HBMR\mmpose\
+
+Purpose:
+standalone pose-estimation debugging/prototyping environment for Birdbill AutoRefine development.
+
+Current role:
+
+* pose localization testing
+* keypoint interpretation
+* anatomical evidence exploration
+* AutoRefine feasibility validation
+* pose visualization/debugging
+
+Do not write MMPose experimental outputs into core Birdbill DB tables until schema stabilizes.
+
+Current tested model family:
+RTMPose
+
+Current tested dataset/schema:
+AP-10K animal pose
+
+Current tested checkpoint:
+rtmpose-m_simcc-ap10k_pt-aic-coco_210e-256x256-7a041aa1_20230206.pth
+
+Current tested config:
+rtmpose-m_8xb64-210e_ap10k-256x256.py
+
+Canonical model folder:
+D:\HBMR\mmpose\models\
+
+Canonical output folder:
+D:\HBMR\mmpose\output\
+
+Current outputs:
+
+visuals
+mmpose-report.html
+mmpose-predictions.json
+mmpose-predictions.csv
+
+Current Birdbill interpretation:
+AP-10K keypoints are reinterpreted as hummingbird-oriented anatomical proxies.
+
+Semantic biological perfection is not currently required.
+
+Requirement:
+stable repeatable anatomical localization sufficient for AutoRefine, comparison stabilization, evidence cropping, and fusion scoring.
+
+Useful current mappings:
+
+0/1 = head anchors
+2 = bill-head front anchor / nose-like anchor
+3 = neck/gorget proxy
+4 = tail base
+5/8 = wing roots
+11/14 = rear-body anchors
+
+========================================================================
+AUTOREFINE CONTRACT
+===================
+
+Canonical standalone module:
+autorefineGUI.py
+
+Purpose:
+derive anatomical evidence crops from pose/keypoint localization.
+
+Current intended flow:
+
+raw detector crop
+→ pose inference
+→ Birdbill reinterpretation layer
+→ anatomical evidence extraction
+→ refined evidence crops
+
+Current preferred output folders:
+
+output\autorefine\head
+output\autorefine\throat
+output\autorefine\body
+output\autorefine\tail
+output\autorefine\visuals\
+
+Likely future evidence crops:
+
+* bill crop
+* bill-side crop
+* head crop
+* throat/gorget crop
+* body crop
+* wing-root crop
+* tail-base crop
+* body-tight crop
+* background-suppressed crop
+
+Important:
+raw detector crop remains canonical evidence artifact. Refined crops are derived artifacts.
+
+AutoRefine quality strongly affects AutoSort quality.
+
+========================================================================
+AUTOSORT CONTRACT
+=================
+
+Canonical standalone module:
+autosortGUI.py
+
+Purpose:
+candidate same-bird ranking using local verification systems.
+
+AutoSort proposes candidate same-bird matches.
+
+AutoSort does not assign final identities.
+
+Preferred modes:
+
+* all-vs-all
+* cross-video only
+* query folder vs reference folder
+
+Preferred filters:
+
+* skip same source
+* skip nearby timestamps
+* top-N candidate ranking
+
+Potential scorer modules:
+
+* LightGlue
+* LoFTR
+* color/gorget
+* bill/body proportions
+* temporal continuity
+* fusion scoring
+
+Future principle:
+AutoSort should rank evidence and propose candidates, while Identity Lab remains the reconciliation authority.
+
+========================================================================
+VISUALID / DINO CONTRACT
+========================
+
+Canonical module:
+visualid.py
+
+Current status:
+experimental / legacy production-facing visual identity boundary.
+
+visualid.py owns:
+
+* DINOv2 model loading
+* crop embedding generation
+* embedding normalization
+* visual_embeddings storage
+* similarity scoring
+* threshold decision
+* calling autoname.py when a new identity is needed
+
+Canonical model:
+facebook/dinov2-small
+
+Canonical model version label:
+dinov2-small-v0.1
+
+Starting threshold:
+MATCH_THRESHOLD = 0.79
+
+Current meaning:
+if best existing crop similarity >= 0.79, assign matched identity; otherwise allocate new provisional identity.
+
+Preferred error mode:
+split identities rather than false-merge identities.
+
+Current important caveat:
+DINOv2 was found to group too strongly by background, lighting, crop framing, blur, and feeder context. It should not be treated as the central future identity engine.
+
+Current architectural status:
+useful as a diagnostic/probe layer, but de-emphasized relative to pose-aware localized biological evidence.
+
+Canonical table:
+visual_embeddings
+
+Current columns:
+
+id
+crop_path
+identity
+model_name
+model_version
+embedding_json
+created_at
+
+Important:
+visual_embeddings.identity should be synchronized when crop_queue.identity changes.
+
+========================================================================
+AUTONAME CONTRACT
+=================
+
+Canonical module:
+autoname.py
+
+Purpose:
+sole authority for provisional Bird identity allocation.
+
+Current canonical emitted format:
+Bird#####
+
+Examples:
+
+Bird00001
+Bird00002
+Bird00010
+Bird00100
+Bird99999
+
+Canonical range:
+Bird00001 → Bird99999
+
+Canonical helper functions:
+
+allocate_bird_name(db_path)
+format_bird_name(number)
+is_autoname(identity)
+autoname_number(identity)
+autoname_sort_key(identity)
+
+No other module may:
+
+* generate Bird IDs directly
+* manually increment Bird IDs
+* assume Bird### format
+* assume Bird#### format
+* create alphanumeric rollover systems
+* create alternate provisional naming systems
+
+All provisional identity creation must flow through:
+
+autoname.allocate_bird_name(db_path)
+
+Long-term identity roadmap:
+Bird##### is a readable provisional display label. Future large-scale architecture may use UUID-backed internal identity entities with aliases, merge/split history, and display labels. Do not implement UUID identity architecture yet.
+
+========================================================================
+MAIN.PY CONTRACT
+================
+
+Canonical module:
+main.py
+
+Owns:
+
+* reading settings.ini
+* collecting input videos/folders
+* sampling frames
+* calling MegaDetector on sampled frames
+* collecting newly exported crops
+* calling identity assignment boundary where active
+* inserting crop_queue rows
+* generating review artifacts
+* writing per-video summary reports
+* printing run diagnostics
+
+main.py should not own:
+
+* detector internals
+* DINO internals
+* MMPose internals
+* DLC internals
+* biometrics logic
+* AutoSort scoring
+* manual identity reconciliation
+* Bird ID generation
+
+Known input-tagging behavior:
+append -HBMR to processed input videos
+prevent duplicate tags
+already-tagged videos may still re-process
+
+Preferred terminology:
+processed_input_tag = -HBMR
+
+Important SQLite lock rule:
+do not hold an open crop_queue write transaction while calling modules that also write to the same DB, such as visualid.py.
+
+========================================================================
+REVIEW.PY CONTRACT
+==================
+
+Canonical module:
+review.py
+
+Current role:
+maintenance / reconciliation support, not blocking human identity prompt.
+
+Current responsibilities:
+
+* schema compatibility
+* legacy identity migration
+* autoname repair for blank identities
+* conversion of legacy new states to auto where appropriate
+* database summaries
+* optional review output opening through settings.ini
+
+review.py must not:
+
+* reintroduce blocking bird-name prompts
+* block ingestion
+* require user input during autonomous mode
+* overwrite existing identities unnecessarily
+* create alternate Bird ID rules
+
+========================================================================
+IDENTITY LAB / CLEANUPGUI CONTRACT
+==================================
+
+Canonical stable filename:
+cleanupGUI.py
+
+Canonical launcher:
+cleanupGUI.bat
+
+Future public-facing naming goal:
+Identifier GUI / Identity Lab
+
+Do not broadly rename files until a coordinated pre-beta naming pass.
+
+cleanupGUI.py owns:
+
+* Bird##### provisional cluster browsing
+* crop-level identity reconciliation
+* Manual Sorting workspace
+* Sandbox / True Names / raw group concepts where active
+* crop selection UI
+* split selected crops to new Bird#####
+* move selected crops to existing Bird#####
+* false-positive tagging
+* low-quality tagging
+* multibird tagging
+* junk archive/delete workflow
+* cleanup action logging
+* DB backup-before-mutation behavior
+* visual_embeddings identity synchronization during reassignment
+* optional profile rebuild triggering
+
+cleanupGUI.py does not own:
+
+* detector logic
+* DINO internals
+* embedding computation
+* Bird ID allocation rules
+* profile formatting
+* MMPose/DLC internals
+
+Manual Sorting hotkeys:
+J = junk
+F = false positive
+
+Junk:
+poor-quality or rejected crop material that should be archived/removed from normal evidence flow.
+
+False positive:
+non-bird detector output retained as training/evaluation evidence when useful.
+
+Multibird:
+preserved evidence, not junk. Full many-to-many identity logic deferred.
+
+Low quality:
+preserved but excluded from clean profile evidence.
+
+Important:
+Bird##### identities are provisional clusters, not biological truth.
+
+Identity Lab is a core Birdbill architecture component, not optional tooling.
+
+========================================================================
+PROFILES CONTRACT
+=================
+
+Canonical module:
+profiles.py
+
+Owns:
+
+* profile generation
+* profile index generation
+* individual bird pages
+* profile data export
+* profile image copying
+* hero image selection
+* derived profile assets
+
+Canonical generated output:
+
+output\profiles\index.html
+output\profiles{profile-name}.html
+output\profiles\data{profile-name}\profile.json
+output\profiles\data{profile-name}\events.csv
+output\profiles\data{profile-name}\hero.jpg
+output\profiles\data{profile-name}\best-crops\
+
+Profiles are derived/rebuildable state.
+
+profiles.py should not mutate review database state.
+
+profiles.py should use autoname_sort_key for Bird##### ordering.
+
+Profiles should exclude rows marked:
+
+identity_status = false_positive
+identity_status = junk
+identity_status = low_quality
+
+Multibird handling:
+preserve separately unless/until relational identity logic exists.
+
+========================================================================
+CLEANUP.PY / LEGACY CLEANUP CONTRACT
+====================================
+
+cleanup.py is legacy/safe editor tooling.
+
+It may still own:
+
+* explicit rename operations
+* merge operations
+* row status correction
+* false-positive tagging
+* training export generation
+* profile rebuild callup
+
+cleanupGUI.py / Identity Lab is the primary current reconciliation direction.
+
+False positives should generally remain stored as longitudinal training data unless intentionally deleted.
+
+Canonical false-positive naming pattern where used:
+
+FalsePositive-{label}
+
+Examples:
+
+FalsePositive-leaf
+FalsePositive-shadow
+FalsePositive-feeder-sway
+FalsePositive-blur
+
+Training export folder:
+output\training\
+
+Training export example:
+output\training\false-positive-training.csv
+
+========================================================================
+BILLTIP TRAINER CONTRACT
+========================
+
+Canonical standalone module:
+billtipTrainerGUI.py
+
+Purpose:
+human-supervised bill-tip training data generation and/or refinement.
+
+Current workflow concept:
+
+* use broad pose or crop context to propose bill_base / candidate bill tip
+* user verifies/corrects bill tip
+* export CSV/JSON training data for DLC or related training pipeline
+
+Preferred terminology:
+
+bill_base
+derived_bill_tip
+bill_tip_candidate
+bill_tip_verified
+
+Do not represent derived bill tip as a native MMPose keypoint.
+
+Reason:
+MMPose currently provides broad anatomical anchors, not true precise bill-tip localization.
+
+Current validated precision source:
+DLC billtip model.
+
+========================================================================
+KNOWN PROFILE LIBRARY CONCEPT
+=============================
+
+Preferred testing strategy:
+build curated known-profile libraries before processing massive archives.
+
+Example structure:
+
+Bird00012
+head_gorget
+bill_side
+wing_side
+tail_spread
+body_general\
+
+Important:
+not all crops contain useful identity evidence.
+
+Birdbill should increasingly evaluate:
+identity evidence quality
+
+not merely:
+bird presence.
+
+Preferred evidence concepts:
+
+bill_length_signal
+wing_length_signal
+gorget_signal
+tail_signal
+side_view_quality
+head_visibility
+overall_identity_value
+
+========================================================================
+ARCHIVE CONTEXT CONTRACT
+========================
+
+Potential module:
+HBMRlauncherGUI.py
+
+Purpose:
+archive-context launch configuration and batch metadata injection.
+
+Current metadata fields:
+
+archive_context
+human_present
+hand_present
+human_contact_type
+friendship_score_delta
+friendship_reason
+
+Current archive_context examples:
+
+finger_landing
+birdbath
+miss
+unknown
+
+Important:
+human/hand context is behavioral context, not identity evidence.
+
+Do not let hand/finger presence become a shortcut identity signal.
+
+Future concepts:
+
+* hand detection
+* finger perch scoring
+* hand-pose analysis
+* friendship metrics
+* perch preference
+* feeding behavior
+
+Potential future module:
+humancontextGUI.py
+
+========================================================================
+BIRDIMAGER / BIRD3D CONTRACT
+============================
+
+Current status:
+standby / architectural placeholder.
+
+Do not implement now.
+
+Do not write BirdImager-specific code yet.
+
+Do not build a separate BirdImager landmark-training path.
+
+BirdImager/Bird3D likely belongs inside Birdbill as a module, subprogram, or tightly integrated workflow rather than a separate pipeline.
+
+Core idea:
+dual-camera evidence capture using two independent cameras aimed at the same feeder/perch area, roughly 45–70 degrees apart, with rough target around 60 degrees.
+
+Initial sync:
+audio slate spike or other visible/audible sync cue, not hardware triggering.
+
+Architectural rule:
+dual-camera footage should be treated both as ordinary Birdbill input and specialty paired evidence.
+
+Each camera stream should run independently through:
+
+raw video
+→ autosampler frames
+→ MegaDetector crops
+→ shared MMPose/DLC keypoints
+→ labeled observations
+
+Then BirdImager/Bird3D layer may add:
+
+* shared session ID
+* camera/source metadata
+* sync offset
+* synced timestamps
+* crop/keypoint pairing
+* calibration metadata
+* 3D keypoint triangulation
+* biometrics-ready outputs
+* optional fitted mesh/STL records
+
+Critical future field:
+synced_time_ms or equivalent.
+
+Primary BirdImager/Bird3D value:
+triangulated 3D keypoints and identity-relevant biometrics, not STL generation.
+
+Potential measurements:
+
+* bill length
+* bill curvature
+* bill width/depth estimates
+* bill-to-head angle
+* head width
+* head length
+* eye-to-bill-base distance
+* crown/throat geometry
+* head/bill ratios
+* relative orientations
+* cross-view consistency
+
+STL/mesh:
+experimental downstream possibility only.
+
+Most realistic mesh target:
+bill-only STL.
+
+Any mesh must be labeled:
+fitted/reconstructed evidence, not a literal perfect scan.
+
+========================================================================
+SPECIESNET / AI DETECTION CONTRACT
+==================================
+
+SpeciesNet / AI detection remains optional diagnostic tooling.
+
+Current architecture priority:
+individual identity reconciliation over species classification.
+
+Species classification should not block the core Birdbill evidence pipeline.
+
+SpeciesNet may remain useful for:
+
+* advanced diagnostics
+* false-positive detection
+* optional beta feature
+* non-hummingbird filtering experiments
+
+========================================================================
+DBCHECK / DIAGNOSTICS CONTRACT
+==============================
+
+Canonical diagnostic utility:
+dbcheck.py
+
+dbcheck.py is diagnostic-only.
+
+It may reference historical/legacy schema fields for drift discovery.
+
+Do not treat dbcheck.py legacy field assumptions as current canonical schema.
+
+dbcheck.py must not mutate Birdbill databases.
+
+========================================================================
+LAUNCHER CONTRACTS
+==================
+
+Canonical user launcher:
+HBMR.bat
+
+Owns:
+top-level user entry point and process order only.
+
+Should not contain:
+database logic, detector logic, review logic, profile logic, or schema repair.
+
+review.bat:
+review-only shortcut operating on existing queued data.
+
+cleanupGUI.bat:
+Identity Lab / cleanup GUI launcher.
+
+run.bat:
+legacy compatibility alias only if retained. Do not allow run.bat and HBMR.bat to evolve separate pipeline assumptions.
+
+========================================================================
+REWRITE TARGET
+==============
+
+Proposed next working milestone:
+Birdbill vNext Minimal Evidence Pipeline v0.1
+
+Definition of done:
+
+A small batch of videos produces:
+
+* source frame records
+* detector crop records
+* storage-controlled retained crop files
+* DLC billtip predictions
+* merged labeled observation records
+* overlay/contact-sheet reports
+
+without creating a giant uncontrolled crop dump.
+
+After that vertical slice works, add:
+
+* MMPose merge into same observation record
+* AutoRefine evidence crops
+* biometrics eligibility
+* profiles
+* Identity Lab integration
+* AutoSort candidate ranking
+* BirdImager-compatible metadata hooks
+
+========================================================================
+REWRITE DESIGN RULES
+====================
+
+Birdbill vNext should be modular and smoke-testable.
+
+Avoid a giant monolithic GUI.
+
+Preferred architecture:
+thin workflow GUI over modular backend services/jobs.
+
+Every important module should remain callable from PowerShell for smoke tests.
+
+GUI should own:
+
+* job orchestration
+* progress display
+* settings exposure
+* report opening
+* review/reconciliation workflows
+
+GUI should not own:
+
+* MegaDetector internals
+* DLC internals
+* MMPose internals
+* biometrics math
+* AutoSort scoring
+* DB schema repair internals
+
+========================================================================
+PLANNING SESSION AGENDA BEFORE CODE-HEAVY REWRITE
+=================================================
+
+Before implementing vNext, establish:
+
+* current module smoke-test results
+* current file/folder/module status
+* proposed directory architecture
+* proposed database/manifest structure
+* cache vs evidence vs debug retention policy
+* labeled observation schema
+* job/progress/logging strategy
+* GUI tab layout
+* BirdImager compatibility hooks
+* explicit non-goals
+
+Only after that should a separate code-heavy session implement the first clean vertical slice.
+
+========================================================================
+CURRENT LIKELY TRIAGE EXPECTATIONS
+==================================
+
+Likely keepers:
+
+* MegaDetector/crop generation
+* DLC billtip
+* MMPose broad scaffold
+* AutoRefine concept
+* biometrics concept
+* Identity Lab / Sandbox / True Names concepts
+* profiles concept
+* AutoSort concept
+* optional SpeciesNet/AI diagnostics
+
+Likely repair/rebuild areas:
+
+* storage structure
+* directory discipline
+* database/manifest ownership
+* GUI shell
+* job/progress system
+* retention policy
+* cross-module evidence format
+* profile generation from cleaner evidence state
+* backup/undo model
+
+Likely de-emphasized:
+
+* DINOv2 as primary individual identity engine
+
+Reason:
+DINO visual identity has shown background/lighting/crop-framing sensitivity and should not dominate future architecture.
+
+========================================================================
+CANON MAINTENANCE RULE
+======================
+
+canon.txt should remain a concise authoritative contract document.
+
+As Birdbill evolves:
+
+* remove obsolete contracts
+* collapse superseded history
+* keep only current canonical truth
+* preserve version/date headers
+* avoid philosophy/commentary unless it directly constrains implementation
+* prefer concise rules over historical accumulation
+
+canon.txt is not a diary.
+canon.txt is the active contract.

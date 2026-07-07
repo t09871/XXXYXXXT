@@ -1,0 +1,188 @@
+{
+  "header": "feeder-single.json | HBMR / Birdbill biometrics feeder profile v0.1 | 2026-07-01 PDT",
+  "profile_name": "feeder-single",
+  "canonical_folder": "D:\\HBMR\\biometrics\\feeder",
+  "units": "mm",
+  "status": "draft_calibration_profile",
+  "notes": [
+    "All stored physical measurements are in millimeters.",
+    "Calibration photos may use inch ruler references, converted using 1 inch = 25.4 mm.",
+    "Background grid is a reliable secondary measurement reference.",
+    "Top-view ruler/grid are on the bottom/support plane, not the top rim/port plane; use top-view scale cautiously because parallax is possible.",
+    "feeder-single is the first biometrics calibration profile.",
+    "feeder-multi is deferred."
+  ],
+  "calibration_images": {
+    "front_or_side": {
+      "filename": "feeder-single-1.jpg",
+      "role": "primary front/side calibration reference",
+      "scale_references": [
+        "inch_ruler",
+        "background_grid"
+      ],
+      "plane_notes": "Ruler and grid appear close enough to the feeder plane for first-pass front/side scale calibration."
+    },
+    "top": {
+      "filename": "feeder-single-2.jpg",
+      "role": "top geometry reference",
+      "scale_references": [
+        "inch_ruler",
+        "background_grid"
+      ],
+      "plane_notes": "Ruler and grid are on the bottom/support plane below the object. Use for orientation and approximate top geometry cross-check, not precision top-plane scaling without parallax correction."
+    }
+  },
+  "scale_sources": {
+    "primary": {
+      "name": "inch_ruler",
+      "conversion": {
+        "inch_to_mm": 25.4
+      },
+      "status": "available_in_calibration_photos"
+    },
+    "secondary": {
+      "name": "background_grid",
+      "grid_spacing_mm": null,
+      "status": "available_but_spacing_not_yet_recorded",
+      "use": [
+        "scale cross-check",
+        "straightness check",
+        "tilt check",
+        "perspective sanity check"
+      ]
+    }
+  },
+  "coordinate_system": {
+    "origin": "feeding_port_center",
+    "x_axis": "horizontal across feeder face",
+    "y_axis": "vertical, positive upward in front/side view",
+    "z_axis": "depth, positive outward from feeder face toward bird/camera depending on view",
+    "notes": [
+      "Initial biometrics bill-length tests may only need x/y front-plane scale.",
+      "Top-view geometry can later help classify whole-bill-visible versus bill-in-feeder frames."
+    ]
+  },
+  "physical_dimensions_mm": {
+    "overall_height": null,
+    "overall_width_front": null,
+    "glass_reservoir_height": null,
+    "glass_reservoir_width_front": null,
+    "base_height": null,
+    "base_width_front": null,
+    "flower_outer_width": null,
+    "flower_outer_height": null,
+    "port_hole_diameter": null,
+    "port_center_to_base_bottom_y": null,
+    "port_center_to_feeder_top_y": null,
+    "port_center_to_glass_centerline_x": null,
+    "top_view_glass_outer_diameter": null,
+    "top_view_port_projection_from_body": null
+  },
+  "landmarks_front_image_px": {
+    "ruler_reference_points": [],
+    "grid_reference_points": [],
+    "feeder_top": null,
+    "feeder_bottom": null,
+    "glass_left_edge": null,
+    "glass_right_edge": null,
+    "glass_top": null,
+    "glass_bottom": null,
+    "base_left_edge": null,
+    "base_right_edge": null,
+    "base_bottom": null,
+    "flower_center": null,
+    "port_center": null,
+    "port_hole_left": null,
+    "port_hole_right": null,
+    "flower_left": null,
+    "flower_right": null
+  },
+  "landmarks_top_image_px": {
+    "ruler_reference_points": [],
+    "grid_reference_points": [],
+    "glass_outer_left": null,
+    "glass_outer_right": null,
+    "glass_outer_top": null,
+    "glass_outer_bottom": null,
+    "mouth_opening_center": null,
+    "flower_center": null,
+    "port_center": null,
+    "port_hole_left": null,
+    "port_hole_right": null,
+    "flower_outer_left": null,
+    "flower_outer_right": null
+  },
+  "measurement_use_rules": {
+    "bill_length": {
+      "initial_status": "enabled_after_landmark_calibration",
+      "requires": [
+        "feeder-single selected",
+        "single bird or unambiguous detector box",
+        "source video/frame/timestamp traceability",
+        "detector box or crop path traceability",
+        "visible bill_base",
+        "visible bill_tip",
+        "whole bill visible",
+        "DLC bill_base and bill_tip confidence above threshold",
+        "scale available from feeder profile"
+      ],
+      "reject_if": [
+        "multiple birds ambiguous",
+        "bill inserted into feeder and tip not visible",
+        "bill base obscured",
+        "bill tip obscured",
+        "severe blur",
+        "no reliable source/frame/detector metadata"
+      ],
+      "aggregation_hint": "Use best/high-confidence or upper-percentile observed bill length, not raw average."
+    },
+    "wing_length": {
+      "initial_status": "planned_after_bill_test",
+      "requires": [
+        "wing closed",
+        "perched or stable pose",
+        "side-ish view",
+        "scale available",
+        "traceable source/frame/detector metadata"
+      ]
+    },
+    "total_length": {
+      "initial_status": "planned_after_bill_test",
+      "requires": [
+        "full bird visible",
+        "usable side-ish body pose",
+        "scale available",
+        "traceable source/frame/detector metadata"
+      ]
+    },
+    "volume": {
+      "status": "disabled",
+      "notes": "Do not compute literal volume."
+    },
+    "max_silhouette_observed": {
+      "status": "deferred",
+      "notes": "May later be used only as a conservative 2D apparent-size proxy."
+    }
+  },
+  "metrics_gui_sort_labels": {
+    "b": "bill",
+    "w": "wing",
+    "t": "total_length",
+    "r": "reject"
+  },
+  "traceability_required_fields": [
+    "source_video",
+    "frame_index_or_timestamp",
+    "detector_box_or_crop_path",
+    "feeder_profile",
+    "measurement_type",
+    "measurement_method",
+    "confidence",
+    "overlay_path_or_review_artifact"
+  ],
+  "version_notes": [
+    "v0.1 is a first-pass feeder profile skeleton.",
+    "Physical dimensions and pixel landmarks are intentionally left null until measured/clicked.",
+    "Keep feeder photos and JSON together in D:\\HBMR\\biometrics\\feeder."
+  ]
+}

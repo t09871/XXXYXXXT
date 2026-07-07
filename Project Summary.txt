@@ -1,0 +1,756 @@
+HBMR / Birdbill Complete Project Summary | AutoRefine operational + LightGlue identity workflow + contextual archive metadata | 2026-06-26 PDT
+
+========================================================================
+MAJOR PROJECT STATUS
+
+Birdbill has now successfully transitioned from:
+
+prototype crop review pipeline
+
+into:
+
+modular pose-aware identity reconstruction architecture.
+
+Current architecture is now operational enough to:
+
+* produce anatomical evidence crops
+* perform LightGlue local verification
+* test query-vs-reference identity matching
+* begin biologically targeted crop selection
+* preserve future behavioral/social metadata
+
+========================================================================
+CURRENT CORE PIPELINE
+
+Current strongest working pipeline:
+
+video
+→ sampled frames
+→ MegaDetector crops
+→ MMPose anatomical localization
+→ AutoRefine evidence crops
+→ LightGlue local verification
+→ candidate ranking
+→ human reconciliation
+
+Key realization:
+
+global crop similarity alone is insufficient.
+
+Birdbill is now focusing on:
+localized biological evidence.
+
+========================================================================
+CURRENT IDENTITY PHILOSOPHY
+
+Birdbill no longer asks:
+“does this crop look similar?”
+
+Instead it increasingly asks:
+“does this crop contain useful identity evidence?”
+
+This is a major conceptual shift.
+
+========================================================================
+CURRENT MOST IMPORTANT ID SIGNALS
+
+Current top-tier biological ID signals:
+
+1. bill length / bill geometry
+2. wing length / body proportions
+3. gorget + head coloration
+4. tail morphology / markings
+
+Important realization:
+
+not every crop contains useful identity evidence.
+
+Future crop-selection logic should score:
+which biological signals are actually visible.
+
+========================================================================
+AUTOREFINE STATUS
+
+AutoRefine is now operational as a standalone module.
+
+Current outputs:
+
+* head crops
+* throat/gorget crops
+* body crops
+* tail crops
+* debug overlays
+* CSV/JSON metadata
+
+Current strongest regions:
+
+* head
+* throat/gorget
+* body
+
+Tail remains lower confidence but still useful.
+
+Important realization:
+AutoRefine quality strongly affects AutoSort quality.
+
+========================================================================
+MMPose STATUS
+
+MMPose remains the largest technical breakthrough so far.
+
+Observed behavior:
+pretrained AP-10K animal priors transfer surprisingly well to hummingbirds.
+
+Validated observations:
+
+* keypoints overwhelmingly land on the bird itself
+* head/body localization is stable
+* throat localization is useful
+* wings and tails are harder
+* face-on views remain difficult
+
+Critical realization:
+
+Birdbill does NOT need:
+perfect biological semantics.
+
+It only needs:
+stable repeatable localization.
+
+========================================================================
+BILL TIP STATUS
+
+Bill tip derivation remains unsolved but strategically important.
+
+Initial attempts:
+
+* pose extrapolation
+* edge search
+* line detection
+* contour projection
+* radial sweep
+
+Results:
+mixed / unstable / often wrong.
+
+However:
+bill length remains extremely valuable.
+
+========================================================================
+NEW BILL TIP STRATEGY
+
+Current preferred direction:
+
+human-supervised bill-tip training.
+
+New standalone tool:
+billtipTrainerGUI.py
+
+Current workflow:
+
+* MMPose Nose = bill base
+* candidate bill-tip hypotheses generated
+* human clicks true bill tip
+* accepted/rejected rows stored
+* CSV/JSON training data exported
+
+Key realization:
+bill length is fixed for a bird.
+
+Across frames:
+bill geometry consistency may become a powerful constraint.
+
+Potential future concepts:
+
+* bill length stability
+* candidate confidence
+* cross-frame consensus
+* learned bill-tip estimation
+* side-view quality scoring
+
+========================================================================
+AUTOSORT STATUS
+
+AutoSort is now operational with LightGlue.
+
+Current successful state:
+LightGlue installed inside hbmr-env and functioning correctly.
+
+Observed performance:
+~50 pair matches in ~120 seconds.
+
+This is workable for focused ranking.
+
+========================================================================
+AUTOSORT ARCHITECTURE SHIFT
+
+Major realization:
+
+AutoSort requires:
+comparison policy,
+not just similarity scoring.
+
+Important discovery:
+all-vs-all matching mostly rediscovered adjacent frames from the same video.
+
+New preferred modes:
+
+* query folder vs reference folder
+* cross-video only
+* skip same-source comparisons
+* skip nearby timestamps
+* top candidate ranking
+
+Current philosophy:
+AutoSort proposes candidates,
+not final identities.
+
+========================================================================
+KNOWN PROFILE LIBRARY STRATEGY
+
+Current best near-term plan:
+
+build a smaller known-bird reference library first.
+
+Preferred workflow:
+
+known-name videos
+→ HBMR
+→ false-positive culling
+→ AutoRefine
+→ curated reference profiles
+→ LightGlue query-vs-reference testing
+
+This is preferred over:
+processing the entire 65 GB archive immediately.
+
+Reason:
+it creates measurable identity evaluation.
+
+========================================================================
+REPRESENTATIVE PROFILE CONCEPT
+
+Major realization from current experiments and literature review:
+
+not all crops should be treated equally.
+
+Future Birdbill should likely prefer:
+
+* sharp side views
+* visible head/gorget
+* visible bill
+* visible tail morphology
+* minimal occlusion
+* stable posture
+
+Current likely future direction:
+representative profile exemplars.
+
+========================================================================
+CROP SELECTION REFRAME
+
+Current major conceptual shift:
+
+Birdbill should not merely detect birds.
+
+It should evaluate:
+identity evidence quality.
+
+Potential future fields:
+
+* bill_length_signal
+* wing_length_signal
+* gorget_signal
+* tail_signal
+* side_view_quality
+* head_visibility
+* blur_score
+* overall_identity_value
+
+Possible future classifications:
+
+* weak evidence
+* moderate evidence
+* strong evidence
+* unidentified female
+* unidentified juvenile selasphorus
+* insufficient identity evidence
+
+========================================================================
+HBMR MAIN.PY STATUS
+
+main.py updated through:
+v2.5.11
+
+New features:
+
+* input tagging with -HBMR
+* prevents duplicate tags
+* already-tagged videos still re-process
+* archive-context metadata support
+
+========================================================================
+NEW ARCHIVE CONTEXT / FRIENDSHIP SYSTEM
+
+New contextual metadata layer introduced.
+
+Important user archive structure:
+
+* ~65 GB finger-landing archive
+* additional misses archive
+* large birdbath archive
+
+Current realization:
+archive-level context is valuable.
+
+New launcher concept:
+HBMRlauncherGUI.py
+
+Current features:
+checkbox:
+“Finger landing / human present archive”
+
+Current metadata fields:
+
+* archive_context
+* human_present
+* hand_present
+* human_contact_type
+* friendship_score_delta
+* friendship_reason
+
+Important conceptual separation:
+human-context evidence is NOT identity evidence.
+
+Instead it supports:
+behavioral/contextual interpretation.
+
+========================================================================
+FUTURE HUMAN-CONTEXT IDEAS
+
+Potential future modules:
+
+* hand detection
+* finger perch scoring
+* MMPose hand analysis
+* perch preference
+* friendship metrics
+* contact frequency
+* hand-feeding behavior
+
+Current near-term implementation:
+archive-level placeholder scoring only.
+
+========================================================================
+ENVIRONMENT ARCHITECTURE
+
+Current environment split appears healthy.
+
+hbmr-env:
+
+* Birdbill runtime
+* LightGlue
+* DINO
+* AutoSort
+* core utilities
+
+openmmlab-env:
+
+* MMPose
+* mmcv
+* mmdet
+* OpenMMLab stack
+
+Reason:
+OpenMMLab dependency fragility remains high.
+
+========================================================================
+CURRENT MODULAR TOOL ECOSYSTEM
+
+Current standalone modules:
+
+* main.py
+* cleanupGUI.py
+* mmposeGUI.py
+* autorefineGUI.py
+* autosortGUI.py
+* billtipTrainerGUI.py
+* HBMRlauncherGUI.py
+
+Current architecture philosophy:
+experimental ML/debug systems remain standalone before integration.
+
+========================================================================
+CURRENT MOST IMPORTANT REALIZATION
+
+Birdbill is converging toward:
+
+pose-aware localized biological evidence reconstruction system.
+
+Not:
+generic image similarity software.
+
+Most important operational success:
+
+existing animal-pose priors already transfer meaningfully to hummingbird anatomy without hummingbird-specific training.
+
+========================================================================
+CURRENT STRONGEST DIRECTION
+
+Current best development path:
+
+1. build curated known-profile library
+2. improve crop evidence quality
+3. refine AutoRefine
+4. improve LightGlue query-vs-reference ranking
+5. develop supervised bill-tip refinement
+6. eventually implement evidence fusion scoring
+
+========================================================================
+CURRENT STRATEGIC PRIORITY
+
+Identity reconstruction remains the central problem.
+
+Social graphs, multibird analysis, friendship modeling, and behavioral inference are all secondary until:
+
+cross-video same-bird matching becomes reliable.
+
+Current Birdbill trajectory strongly suggests this is now feasible.
+
+
+Project Summary | HBMR / Birdbill | v1.0 | 2026-06-29 PDT
+
+SUMMARY STRUCTURE CONTRACT
+Every future complete project summary should use this structure unless intentionally revised: 1) Header with project name, summary version, date, and phase. 2) Current project identity and strategic phase. 3) Core pipeline / data flow. 4) Module map with filenames and ownership. 5) Canonical naming and launcher rules. 6) Current active development track. 7) Data/schema/storage philosophy. 8) UI/workflow principles. 9) Validated lessons and known pitfalls. 10) Debug status / stable vs experimental modules. 11) Deferred ideas and sideprojects. 12) Next recommended priorities. The next assistant should assume no prior project knowledge and use this summary as onboarding context, not as a replacement for checking current canon.txt and coding notes before coding.
+
+CURRENT PROJECT IDENTITY
+HBMR / Birdbill is a hummingbird identity reconstruction system. It has evolved from a crop review pipeline into a pose-aware, evidence-ranked re-ID architecture. The current phase is transitioning from isolated crop review toward temporal evidence-aware sampling, where video sequences, adjacent frames, pose continuity, and high-quality still-photo evidence are used to select better identity evidence before human review or model training.
+
+CORE PIPELINE
+Current broad architecture: video or still-photo source -> SamplerGUI evidence intake -> frame/photo candidate generation -> MegaDetector crop detection -> MMPose anatomical localization -> AutoRefine evidence crops -> bill/head/gorget/tail/body evidence scoring -> bill base/tip trainer or LightGlue/AutoSort query-vs-reference workflow -> Identity Lab / cleanupGUI reconciliation -> profiles and future ecological/social outputs. The key current shift is that SamplerGUI should become the front-end evidence generator before identity reconciliation.
+
+MODULE MAP
+main.py owns legacy/core video intake, settings loading, frame sampling, MegaDetector orchestration, crop_queue insertion, and database/review artifacts. megadetector.py owns MDV6 detector loading, detection normalization, crop padding, and output/crops export. visualid.py owns DINOv2 embedding logic but DINO is currently de-emphasized because it grouped too much by background/lighting. autoname.py owns all provisional Bird##### allocation and no other module should generate Bird IDs. cleanupGUI.py is the current Identity Lab-style reconciliation workbench for provisional identity clusters, crop-level moves/splits, false positives, low-quality, junk, and manual sorting. profiles.py owns derived profile pages and galleries. speciesid.py is technically functional but biologically unreliable for current hummingbird crops and is optional/deprioritized. mmposeGUI.py is the standalone OpenMMLab/MMPose debugging and pose-localization environment. autorefineGUI.py is the pose-derived anatomical evidence crop module. autosortGUI.py is the LightGlue query/reference ranking workflow. billtipTrainerGUI.py is the human-corrected bill base + bill tip labeling tool. SamplerGUI is the new active evidence intake/sampling tool.
+
+CANONICAL NAMING AND LAUNCHER RULES
+Before future coding, review coding notes and current canon.txt. Do not infer contracts from memory if the current file can be provided. Active debug file handoffs may use versioned filenames, but BAT launchers should call stable canonical filenames. Example: use samplerGUI.py for the launcher target, not SamplerGUI-v0.1.0.py, because versioned names will become stale after iteration. Final/canonical script names should be stable; versioned artifacts are for debug tracking. Canonical provisional identity format is Bird#####. mr-review.db is a stale name and should eventually migrate toward hbmr-review.db, birdbill-review.db, or role-specific databases, but not during the immediate sampler transition.
+
+CURRENT ACTIVE DEVELOPMENT TRACK
+BilltipTrainerGUI reached v0.5.0 and is working. It supports corrected bill base + bill tip labels, premium full-bill side-view training rows, and temporal neighbor metadata including source video key, frame number, timestamp, sequence ID, neighbor count, and best bill frame. Training expansion is paused because hand labeling is tedious and better sampling should reduce workload. SamplerGUI v0.1.0 exists and currently imports selected videos/batches, avoids giant folder scans, outputs under D:\HBMR\output\sampler, and creates basic best/weak frame outputs and reports. SamplerGUI v0.2 should add video + still-photo inputs, burst/denser sampling, high-resolution still-photo crop extraction, MMPose/AutoRefine-ready outputs, evidence scoring, and storage-efficient candidate export.
+
+DATA / SCHEMA / STORAGE PHILOSOPHY
+The current data-era shift is from isolated crop rows toward source-aware sequences. Future rows should preserve source_type, source_path, source_video_key, frame_number, time_sec, sequence_id, burst_id, neighbor_count, pose_stability_score, best_bill_frame, best_gorget_frame, best_tail_frame, identity_evidence_score, and crop-edge/visibility quality fields where applicable. Sampled frames should be treated as cache/intermediate state, not permanent archive by default. Save selectively: preserve best evidence crops and metadata, avoid duplicating originals, use source-path/frame keys or hashes to avoid repeat crops, and separate best evidence from disposable intermediate data. Still-photo imports are important because long-lens photos may provide higher-resolution identity reference evidence than slow-motion video crops.
+
+UI / USER WORKFLOW PRINCIPLES
+The user strongly prefers low typing, drag/drop or GUI workflows, selected-file imports rather than giant folder scans, low repetitive labeling, and smooth review tools. The guiding principle is low user workload with high-quality evidence. Training should be made less tedious by using SamplerGUI to find likely-good bill/head/gorget/tail crops before opening labelers. Human review should verify high-value candidates, not sift through large amounts of weak evidence.
+
+VALIDATED LESSONS AND PITFALLS
+Evidence quality matters more than raw crop quantity. MMPose does not need perfect hummingbird semantics; it needs stable repeatable localization. Existing AP-10K animal pose priors transfer surprisingly well to hummingbird anatomy. Bill base correction matters because MMPose/AP-10K nose is often not true bill base. DINOv2 is not reliable as a default individual discriminator because it can over-weight background, lighting, and crop composition. LightGlue is useful as a local verifier/ranker, especially in query-vs-reference workflows, but not as a monolithic identity solution. All-vs-all matching can rediscover adjacent frames from the same video instead of true cross-video identity. OpenMMLab dependencies are fragile and should remain isolated in openmmlab-env with explicit interpreter paths. Storage ballooning is a real risk, especially sampled frames and backup-per-action undo behavior.
+
+DEBUG STATUS
+Stable/currently working: billtipTrainerGUI v0.5.0, SamplerGUI v0.1.0 basic video sampling, MMPose standalone environment, AutoRefine concept/output direction, LightGlue AutoSort proof of concept, Bird##### autoname direction. Experimental/needs careful iteration: SamplerGUI v0.2 evidence scoring, burst sampling, still-photo intake, MMPose/AutoRefine integration into sampler, storage-efficient derived crop management, future database/schema transition. Deferred: hand posture tracking, direct VHR-BirdPose integration, SLEAP/LEAP experiments, 3D-MuPPET-style full integration, stereo feeder hardware build.
+
+SIDEPROJECTS / DEFERRED CONCEPTS
+Stereo feeder / 3D BillPrint is a promising sideproject: dual synchronized cameras, visual sync such as LED flash or blinking LED, fixed feeder geometry, stereo calibration, and 3D bill reconstruction as a potential identity fingerprint. UV/multispectral re-ID, smart feeder systems, field stations, education/exhibit mode, and verified hummingbird identity datasets remain long-term sideproject directions. Hand posture tracking is tabled for now, but later could reuse the same temporal sampling techniques for finger position, palm orientation, bird-on-hand contact, and friendship/context scoring.
+
+NEXT PRIORITIES
+
+1. Test SamplerGUI v0.1.0. 2. Start a fresh implementation chat for SamplerGUI v0.2. 3. Begin that chat by reviewing coding notes and current canon.txt. 4. Use stable canonical filename samplerGUI.py plus a generic BAT launcher. 5. Add selected video and still-photo intake. 6. Add denser/burst sampling for video and high-resolution crop handling for stills. 7. Add MMPose/AutoRefine-ready output structure and basic evidence scoring. 8. Preserve storage discipline: sample generously, save selectively. 9. Use sampler-selected evidence to feed billtipTrainerGUI and AutoSort, instead of expanding tedious manual training from random crops.
+
+
+Project Summary | HBMR / Birdbill | v1.2 | 2026-06-30 PDT | DLC Billtip Bootstrap / Hands-Off Landmark Automation Phase
+
+SUMMARY STRUCTURE CONTRACT
+Every future complete project summary should use this structure unless intentionally revised: 1) Header with project name, summary version, date, and phase. 2) Current project identity and strategic phase. 3) Core pipeline / data flow. 4) Module map with filenames and ownership. 5) Canonical naming and launcher rules. 6) Current active development track. 7) Data/schema/storage philosophy. 8) UI/workflow principles. 9) Validated lessons and known pitfalls. 10) Debug status / stable vs experimental modules. 11) Deferred ideas and sideprojects. 12) Next recommended priorities. The next assistant should assume no prior project knowledge and use this summary as onboarding context, not as a replacement for checking current canon.txt and coding notes before coding.
+
+CURRENT PROJECT IDENTITY AND STRATEGIC PHASE
+HBMR / Birdbill is now in a DLC billtip bootstrap phase. The immediate goal is to wrap up the bill-tip detour as quickly as possible and convert it into a usable, mostly hands-off ML evidence source for AutoRefine. The guiding principle going forward is: hands off as much as possible. Human work should not become a bulk labeling requirement. Manual input should be limited to spot-checking, correction, validation, and debugging, not clicking through hundreds or thousands of crops.
+
+This phase represents the first successful transition of the bill-tip branch from custom heuristic/tooling/debug infrastructure into an actual trainable ML workflow. MMPose/AP-10K remains useful as an off-the-shelf pose localization tool, but the new bill-tip path is DeepLabCut-based and independent.
+
+CORE PIPELINE / DATA FLOW
+Current intended flow:
+
+video/photo archive input
+→ samplerGUI.py sparse evidence intake
+→ MegaDetector detector crops
+→ billtipTrainerGUI / Birdbill premium JSON annotation source
+→ billtipToDLC.py conversion bridge
+→ DeepLabCut project training
+→ DLC bill_base / bill_tip prediction
+→ confidence + geometry gating
+→ AutoRefine anatomical crops
+→ like-to-like comparison such as gorget-to-gorget, head-to-head, bill-side-to-bill-side
+→ AutoSort candidate ranking
+→ Identity Lab / cleanupGUI reconciliation
+
+The immediate bill-tip path is:
+
+Birdbill premium JSON
+→ DLC labeled-data folder
+→ DLC training dataset
+→ DLC-trained 2-keypoint model
+→ DLC predictions on detector crops
+→ Birdbill import/overlay/AutoRefine usage later
+
+Critical strategic rule:
+Do not require future humans to bulk-label 500+ images. The current 118 premium rows are enough to train a first DLC model and test whether bill-tip predictions are useful. If the model is imperfect, use high-confidence / geometrically sane predictions and discard weak outputs. Bill-tip should be an opportunistic evidence source, not a blocker.
+
+MODULE MAP
+main.py owns legacy/core video intake, review/database pipeline, sampling, MegaDetector orchestration, crop_queue insertion, and visualid assignment in the older identity pipeline.
+
+megadetector.py owns MDV6 detector loading, normalized detections, crop export, and the canonical output/crops crop contract.
+
+samplerGUI.py owns archive intake, sparse frame/photo preparation, detector orchestration, detector-crop manifests, evidence scoring, and bridge routing into billtip training.
+
+billtipTrainerGUI.py owns human-supervised bill-base + bill-tip training data creation and Birdbill JSON export. It remains the Birdbill-side annotation/provenance tool, but should not become a long-term bulk-labeling bottleneck.
+
+billtipToDLC.py is the new single-purpose conversion bridge. It reads Birdbill premium JSON and writes DLC-compatible labeled-data files. It does not train, does not launch DLC GUI, does not touch the Birdbill database, and does not own annotation truth. It is a generated bridge from Birdbill annotation format into DLC training format.
+
+DeepLabCut owns actual bill_base / bill_tip model training and prediction for this branch. DLC is not replacing Birdbill. DLC is the external ML engine.
+
+mmposeGUI.py remains a standalone pose-debugging visualizer and should not be called by other GUIs.
+
+MMPose/AP-10K remains useful for pose localization and approximate anatomical anchors, but the DLC bill-tip model is independent and is not a layer of MMPose.
+
+Future likely module: dlcBilltipInfer.py or billtipInfer.py, a headless DLC inference bridge that runs DLC prediction over crop folders, writes overlays/prediction CSV or JSON, and lets Birdbill consume predictions without using the DLC GUI.
+
+visualid.py owns DINOv2 identity embeddings but remains deprioritized for final identity confidence because DINO had background/lighting bias.
+
+autorefineGUI.py owns anatomical evidence refinement concepts, including future crops for head, throat/gorget, body, tail, and bill-side evidence.
+
+autosortGUI.py owns local candidate ranking / same-bird proposal workflows, likely using LightGlue and future fusion scoring.
+
+cleanupGUI.py remains the Identity Lab reconciliation workspace.
+
+autoname.py remains canonical provisional Bird##### allocator.
+
+CANONICAL NAMING AND LAUNCHER RULES
+Before future coding, review current canon.txt and current coding notes. Do not infer contracts from stale memory or summaries.
+
+DLC project short canonical working root:
+D:\HBMR\dlc\billtip
+
+Actual DLC-created config path:
+D:\HBMR\dlc\billtip\billtip-HB-2026-06-30\config.yaml
+
+Current canonical billtip training source folder:
+D:\HBMR\output\billtip-trainer
+
+Current DLC interpreter path:
+C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe
+
+DLC version validated:
+3.0.0
+
+Torch validated:
+2.12.1+cpu
+
+CUDA:
+False
+
+Use explicit interpreter paths. Do not rely on activated environments or global python.
+
+Canonical Birdbill project names should stay short where possible because typing burden is real. DLC project name should remain billtip, not long descriptive names.
+
+BAT launchers should target stable canonical filenames, not versioned debug filenames.
+
+CURRENT ACTIVE DEVELOPMENT TRACK
+The Birdbill premium billtip JSON v0.6.2 contained 118 valid premium rows. Those rows were successfully converted into DLC format and imported into the DLC project. Labels transferred successfully. DLC accepted the full 118-image batch and split it into 112 training images and 6 test images.
+
+A DLC CPU training run is currently underway using DLC-recommended settings:
+save epochs = 50
+max epochs = 200
+
+Training status observed:
+Epoch 10/200 evaluation completed
+train loss about 0.00271
+valid loss about 0.00404
+test RMSE about 3.46 px
+test RMSE pcutoff about 3.40 px
+test mAP about 42.05
+test mAR about 50.00
+
+Later observed progress:
+epoch 31/200
+estimated training speed roughly 3.75 minutes per epoch after early startup
+epoch 50 expected around 70 minutes after epoch 31
+full 200 epoch CPU run estimated around 10.5–11 hours total
+
+Interpretation:
+DLC import, dataset creation, training, and early evaluation are all working. The tiny 6-image test set makes metrics fragile, but a 3–4 px RMSE at epoch 10 is promising enough to continue to the epoch 50 checkpoint and evaluate visually.
+
+DATA / SCHEMA / STORAGE PHILOSOPHY
+Birdbill JSON remains the canonical annotation/provenance format. DLC labeled-data files are generated artifacts.
+
+DLC project data is not canonical Birdbill state. It is an ML workspace derived from Birdbill annotations.
+
+The current output/crops folder is canonical for many HBMR/Birdbill modules. Renaming or moving it may not break DLC training because the 118 imported images were copied into the DLC project structure, but active HBMR modules may still assume output/crops exists. Safest storage maneuver:
+rename output/crops to output/crops-archive
+then create a fresh output/crops for new runs
+and optionally create output/crops-sampler or output/crops-dlc-test for disposable debug batches.
+
+Future recommended structure:
+D:\HBMR\output
+crops
+crops-archive
+crops-sampler
+crops-dlc-test
+billtip-trainer
+manifests
+reports
+logs
+profiles
+database\
+
+The earlier storage principle still holds:
+images are evidence artifacts
+manifests are routing
+debug outputs should be disposable
+sampled frames are cache/intermediate state
+detector crops are more canonical than sampled frames
+
+UI / WORKFLOW PRINCIPLES
+The user strongly prefers GUI/drag-drop workflows and minimal typing, but for ML environments explicit interpreter paths are acceptable and often safer.
+
+Typing burden is real. Keep project names short.
+
+Long-term, the system should avoid human bulk labeling. The goal is not a human-teaches-machine program. The goal is to lean on existing ML tools and use whatever prediction quality is good enough.
+
+Manual work should be:
+spot check
+validate overlays
+accept/reject low-confidence cases
+correct only when strategically useful
+
+Do not suggest “label 500 more images” as a normal path. More labels may improve performance, but that is not an acceptable core requirement for this project.
+
+Research existing tools before custom implementation. The project should theorize architecture and investigate existing ML/computer vision options before diving into custom code.
+
+VALIDATED LESSONS AND KNOWN PITFALLS
+Major validated lessons:
+
+1. The DLC environment is alive.
+   DLC import works.
+   DLC version is 3.0.0.
+   Torch CPU works.
+   CUDA is not available.
+
+2. DLC can train on the Birdbill-derived dataset.
+   The converted 118-row dataset imported successfully.
+   DLC saw 112 training images and 6 test images.
+   Training loss began dropping immediately.
+
+3. The converter path works.
+   Birdbill JSON can become DLC labels without using the DLC labeling GUI.
+
+4. DLC GUI/import expectations are awkward.
+   DLC assumes its own labeling workflow and does not provide an obvious “import external JSON” button. The correct strategy is to generate DLC-compatible labeled-data CSV/H5 structure directly.
+
+5. The project should avoid custom ML infrastructure unless existing tools fail.
+   DLC is a better off-ramp than building a Birdbill-native trainer from scratch.
+
+6. The previous 50–200 row target was valid for first transfer-learning / proof-of-concept experiments.
+   It was incorrect to imply that thousands of hand labels were required before trying real ML. Thousands may help durability, but they are not a prerequisite for the current proof.
+
+7. The “hands off as much as possible” principle is now central.
+   Bill-tip should become confidence-gated automation, not a perpetual annotation task.
+
+8. Speed answers have been dangerous for this project.
+   Future work should prioritize careful checking over fast assumptions.
+
+9. Existing options should be researched before custom work.
+   The project lost time by reinventing pieces that may already exist in the ML landscape.
+
+DEBUG STATUS / STABLE VS EXPERIMENTAL MODULES
+Currently functional:
+DLC environment import
+Torch CPU backend
+DLC project creation
+Birdbill JSON to DLC conversion
+DLC label transfer
+DLC training start
+Early DLC evaluation metrics
+MegaDetector crop export
+sampler-to-detector crop bridge
+billtipTrainer corrected bill-base / bill-tip JSON export
+
+Stable enough for next test:
+DLC epoch 50 checkpoint
+DLC visual evaluation
+DLC prediction on small unseen crop batch
+
+Still experimental:
+DLC prediction quality on new videos
+DLC confidence thresholds
+DLC prediction import back into Birdbill
+AutoRefine use of DLC bill vector
+AutoSort fusion scoring
+quality/geometry gates
+debug crop folder conventions
+processed-input tracking
+full hands-off archive-scale routing
+
+Known risks:
+CPU-only training is slow
+test set is very small
+DLC may overfit the 118 images
+DLC may fail on new lighting/pose/source videos
+false-positive burst crops from autosampler can inflate workload
+output/crops is still a canonical path for older modules
+DLC project has its own directory structure, so config path is nested under billtip-HB-2026-06-30
+
+DEFERRED IDEAS AND SIDEPROJECTS
+Deferred / not now:
+labeling gorget/head/body/tail/wing landmarks
+training a full multi-landmark Birdbill model
+custom PyTorch trainer
+custom active-learning GUI
+custom keypoint regressor unless DLC fails
+UUID-backed identities
+full 3D BillPrint
+UV/multispectral re-ID
+hand posture tracking
+deep social/ecological profile inference
+
+Potential future after DLC proof:
+Add more landmarks only if they are generated by a mostly automated or low-burden workflow.
+Use DLC or SLEAP-style workflows if multi-landmark pose becomes necessary.
+Use DLC bill_base/bill_tip to improve side-view scoring, face-on rejection, bill length estimation, and AutoRefine crop normalization.
+
+NEXT RECOMMENDED PRIORITIES
+
+1. Let DLC reach epoch 50 if practical, because that is the first saved checkpoint.
+
+2. After epoch 50, evaluate visually. Do not rely only on loss metrics. Check overlays:
+   bill_base near true base
+   bill_tip near visible tip
+   predictions sane on held-out images
+   confidence/likelihood useful
+
+3. Do not wait for 200 epochs unless convenient. The goal is proof of viability, not final production training.
+
+4. Create a small, diverse new crop test library from different videos. Do not import these directly as labels. First run DLC inference on them.
+
+5. Build or use a minimal DLC inference bridge next, not another labeling GUI. Likely module:
+   billtipInfer.py or dlcBilltipInfer.py
+
+Responsibilities:
+run DLC on crop folder
+export predictions
+create overlay images
+write confidence/geometry report
+do not mutate Birdbill DB yet
+
+6. Use confidence + geometry gates:
+   high confidence + sane bill length/angle = usable
+   low confidence / absurd geometry / false positive = ignore
+   medium confidence = optional review
+
+7. Keep bill-tip as an opportunistic AutoRefine signal. It should not block identity pipeline progress.
+
+8. Continue researching existing tools before custom architecture. DLC is currently winning because it replaced a custom training rabbit hole with an existing pose-estimation workflow.
+
+9. Future project summaries must include “hands off as much as possible” as a guiding principle.
+
+10. Future coding should begin by reviewing current canon.txt and coding notes, then perform small smoke tests before major rewrites.

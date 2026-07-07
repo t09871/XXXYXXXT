@@ -1,0 +1,566 @@
+sideproject.txt | HBMR / Birdbill side projects master list | 2026-06-23 PDT
+
+========================================================================
+BIRDBILL / HBMR SIDE PROJECT MASTER LIST
+========================================
+
+Purpose:
+Long-term experimental hardware, ecology, tooling, publishing, and product ideas related to:
+hummingbird observation
+bird behavior
+bird identity
+bird ecology
+bird-human interaction
+and Birdbill/HBMR infrastructure.
+
+This file intentionally includes:
+wild ideas
+experimental ideas
+consumer-product ideas
+research directions
+and speculative future tooling.
+
+Not all projects are expected to become products.
+
+========================================================================
+UV / MULTISPECTRAL HUMMINGBIRD RE-ID SYSTEM
+===========================================
+
+Concept:
+Use UV-reflectance imagery as an additional identity signal for hummingbird Re-ID.
+
+Motivation:
+Birds may perceive UV-visible individual markings not present in RGB footage.
+
+Potential architecture:
+paired RGB camera
++
+paired UV-capable camera
+
+Reason:
+UV imagery alone may be difficult for humans to interpret.
+Paired synchronized footage could allow:
+RGB ↔ UV identity correlation.
+
+Potential workflow:
+synchronized feeder footage
+-> same timestamp
+-> RGB crop
+-> UV crop
+-> paired identity evidence
+
+Potential future Birdbill module:
+multispectral fusion scoring
+
+Possible future scoring:
+RGB local features
++
+UV reflectance patterns
++
+temporal continuity
++
+behavioral signatures
+
+Potential hardware:
+dual synchronized cameras
+shared mount
+shared trigger/timestamp
+fixed feeder geometry
+
+Open questions:
+Do hummingbirds possess stable individual UV-reflectance traits?
+How stable are UV patterns across:
+angle
+molt
+lighting
+motion blur
+wet feathers
+gorget flash conditions?
+
+Potential issue:
+UV capture likely requires:
+full-spectrum camera modification
+or
+specialized UV-capable hardware.
+
+========================================================================
+SMART FEEDER SYSTEM
+===================
+
+Concept:
+Instrumented hummingbird feeder ecosystem optimized for:
+identity research
+ecology tracking
+social graphing
+and long-term observation.
+
+Potential features:
+camera mounts
+stable perch geometry
+known background geometry
+lighting control
+multi-camera synchronization
+weather logging
+visit timing
+occupancy tracking
+feeder queue analysis
+bird interaction tracking
+
+Potential Birdbill integration:
+automatic crop generation
+known feeder coordinates
+distance/occupancy analysis
+multibird interaction mapping
+
+Potential future features:
+RFID
+weight sensors
+nectar level sensors
+temperature sensors
+microphone array
+UV lighting experiments
+night-safe observation modes
+
+========================================================================
+ANTI-MOLD FEEDER / WATER HEALTH SYSTEM
+======================================
+
+Concept:
+Simple consumer-friendly hummingbird feeder water-health test system.
+
+Motivation:
+Many hummingbird feeders become unsafe due to:
+mold
+yeast
+fermentation
+biofilm
+heat exposure
+
+Potential forms:
+dip-strip kit
+colorimetric test
+UV-reactive test
+smartphone-camera assay
+low-cost chemical indicator
+
+Potential outputs:
+safe
+replace soon
+unsafe
+
+Potential audience:
+casual feeder owners
+bird rescue groups
+nature centers
+schools
+
+Potential future expansion:
+general birdbath water safety testing.
+
+========================================================================
+BIRDBILL COMMUNITY GRAPH / SOCIAL NETWORK
+=========================================
+
+Concept:
+Map long-term hummingbird social structure.
+
+Potential tracked metrics:
+co-occurrence
+territorial overlap
+perch preference
+time-of-day behavior
+courtship proximity
+feeder queue order
+aggression frequency
+pair-bond likelihood
+juvenile-parent interaction hypotheses
+
+Potential visualization:
+profile image nodes
+colored relationship lines
+dynamic seasonal graphs
+
+Potential future outputs:
+community evolution timelines
+dominance maps
+interaction heatmaps
+
+Potential risk:
+identity contamination would poison graph quality.
+Requires strong Re-ID integrity first.
+
+========================================================================
+BIRDBILL FIELD STATION
+======================
+
+Concept:
+Portable or semi-permanent observation station optimized for:
+stable camera geometry
+controlled backgrounds
+lighting consistency
+and automated Birdbill ingestion.
+
+Potential features:
+weatherproof enclosure
+solar power
+edge compute
+camera sync
+known perch geometry
+timestamp synchronization
+automatic upload pipeline
+
+Potential future deployment:
+public gardens
+research stations
+schools
+backyard citizen science
+
+========================================================================
+BIRDBILL ECOLOGY TIMELINE ENGINE
+================================
+
+Concept:
+Longitudinal life-history reconstruction for individual birds.
+
+Potential metrics:
+first appearance
+last appearance
+seasonal return
+territory duration
+visit frequency
+preferred flowers/feeders
+interaction history
+estimated age transitions
+
+Potential outputs:
+interactive timelines
+“life stories”
+seasonal migration hypotheses
+
+========================================================================
+AUTONOMOUS FEEDER CAMERA ARRAY
+==============================
+
+Concept:
+Multiple synchronized cameras around one feeder.
+
+Motivation:
+single-camera identity ambiguity
+occlusion
+gorget-angle variation
+partial-body crops
+
+Potential benefits:
+3D position estimation
+multiview identity evidence
+better local-feature matching
+wing/body geometry recovery
+
+Potential future use:
+multiview Re-ID fusion.
+
+========================================================================
+BIRDBILL EDUCATION / EXHIBIT MODE
+=================================
+
+Concept:
+Public-facing simplified Birdbill mode.
+
+Potential use cases:
+museums
+schools
+nature centers
+science exhibits
+
+Potential features:
+live feeder recognition
+simple bird profiles
+safe identity confidence
+community graphs
+species annotations
+educational overlays
+
+========================================================================
+BIRDBILL MOBILE FIELD APP
+=========================
+
+Concept:
+Field companion app for:
+bird sightings
+photo uploads
+identity confirmation
+community participation
+
+Potential features:
+manual tagging
+local feeder logs
+migration observations
+bird profile sharing
+AI-assisted but conservative identity suggestions
+
+========================================================================
+BIRDBILL VERIFIED DATASET
+=========================
+
+Concept:
+Long-term curated hummingbird identity dataset.
+
+Potential value:
+bird Re-ID research
+multispectral studies
+ecology studies
+behavioral analysis
+future ML benchmarking
+
+Potential future structure:
+RGB
+UV
+multiview
+temporal sequences
+interaction events
+known/verified identities
+
+========================================================================
+BIRDBILL IN-HOUSE RESEARCH STACK
+================================
+
+Concept:
+Heavy experimental internal stack beyond beta product scope.
+
+Potential modules:
+LightGlue
+LoFTR
+MegaDescriptor
+multispectral scoring
+temporal plausibility
+community-graph inference
+multibird continuity
+behavioral embeddings
+
+Potential philosophy:
+models propose
+human verifies
+history preserved
+
+========================================================================
+BOOK / MEDIA PROJECTS
+=====================
+
+Current known project:
+“How to Train Your Hummingbird (in 542 Easy Steps!)”
+
+Potential future media:
+bird profile books
+community-story books
+migration stories
+bird personalities
+educational YouTube series
+slow-motion film projects
+field-station livestreams
+
+========================================================================
+IMPORTANT STRATEGIC INSIGHT
+===========================
+
+Birdbill may ultimately become:
+part software platform
+part ecological archive
+part citizen-science tool
+part observational research system
+part hardware ecosystem
+
+The strongest long-term moat may not be:
+a single ML model
+
+but instead:
+longitudinal verified identity data
+stable observation geometry
+paired multimodal evidence
+and human-supervised ecological continuity.
+
+
+
+# Ultrafeeder Project Summary v0.1
+
+# Header: Theory-stage architecture for automated hummingbird feeder sterilization appliance
+
+Date: 2026-06-30
+
+Project Name:
+Ultrafeeder
+
+Core Goal:
+Develop a proof-of-concept automated hummingbird feeder appliance capable of onboard rinse, steam sterilization, drying, refill, and reassembly cycles using largely off-the-shelf feeder components and hobby-accessible fabrication methods.
+
+Primary Concept Direction:
+The project evolved away from “smart feeder” concepts and toward a small autonomous sanitary appliance architecture. Emphasis shifted toward theory-first engineering discussion before visualization or STL generation.
+
+Major Architecture Conclusions:
+
+* Wash/steam chamber should remain stationary.
+* Moving the entire wash apparatus or moving hose-connected lids creates excessive mechanical and sanitation complexity.
+* Precision wet rails/sliders were rejected due to sugar contamination, steam exposure, and maintenance burden.
+* Rotating wet cassettes remain mechanically attractive but introduce sanitation and material concerns due to crevices and repeated steam exposure.
+* Current favored direction uses:
+
+  * fixed stainless washpot
+  * overhead gantry
+  * lightweight movement of only feeder-contact parts
+  * stationary plumbing/utilities
+  * controlled exhaust and drain systems
+
+Current Proposed Mechanical Architecture:
+
+* Two-position motorized ramekin carousel:
+
+  * one bird-facing feeding position
+  * one protected holding/service position
+* Overhead gantry system:
+
+  * likely based on off-the-shelf 3D printer gantry hardware
+  * stepper-driven
+  * potentially G-code controlled
+* Stainless fork/hook end effector:
+
+  * fabricated from ~2 mm stainless rod
+  * capable of:
+
+    * lifting silicone flower top via stainless lifting eyes
+    * lifting ramekin via rolled lip
+    * lifting washpot lid
+* Fixed stainless washpot:
+
+  * small cylindrical stainless vessel (~1 L or less)
+  * integrated drain
+  * removable lid
+  * rinse/steam/dry chamber
+* Steam generator external to chamber:
+
+  * atmospheric low-pressure steam only
+  * no pressurized vessel design
+
+Feeder Component Decisions:
+
+* Feeder components should remain largely off-the-shelf.
+* No custom molded silicone parts planned for POC.
+* Silicone flower tops may be modified with:
+
+  * stainless jump rings
+  * stainless lifting eyes
+    to allow robotic manipulation.
+* Stainless ramekins selected for steam survivability and easy handling via rolled lip geometry.
+
+Material Conclusions:
+
+* PETG considered insufficient for repeated direct steam exposure.
+* Polycarbonate printing considered promising for future development.
+* Current preferred structure:
+
+  * printed structural parts where appropriate
+  * stainless for steam/wet surfaces
+  * possible steel frame/enclosure construction
+* Steam-contact printed parts should be minimized.
+
+Washpot Input/Output Architecture:
+Top/Lid:
+
+* exhaust outlet
+* rinse water inlet
+* dry air inlet
+* movable nectar fill wand
+* lid lifting interface
+
+Side:
+
+* low steam inlet
+* optional side rinse assist
+* temperature probe
+* backup vent path
+
+Bottom:
+
+* primary drain
+* overflow/leak capture path
+
+Internal:
+
+* ramekin rack
+* flower-top rack
+* lid parking station
+
+Steam System Conclusions:
+
+* Atmospheric steam only.
+* Steam enters low and exits high.
+* Controlled exhaust required due to bird-dense deployment environment.
+* Exhaust should likely route through:
+
+  * condenser/cooling path
+  * finned or baffled cooling chamber
+  * controlled vent
+* Silicone tubing appears viable for low-pressure steam exhaust if properly routed and drained.
+
+Condensate/Waste Handling:
+
+* All rinse water and condensate should route into removable waste reservoir.
+* Standard soda bottle considered attractive removable waste tank solution.
+* Waste reservoir:
+
+  * lower shaded compartment
+  * replaceable/cleanable
+  * non-sterile acceptable
+* Hot condensate cooling may require:
+
+  * stainless intermediate trap
+  * cooling loop
+  * vertical drop section
+
+Dry Cycle Conclusions:
+Preferred dry architecture:
+
+* lid remains closed after steam cycle
+* filtered dry air forced into chamber
+* exhaust exits through same controlled exhaust path
+* fan-driven positive airflow preferred
+* optional warm-air assist possible
+
+Programming/Controls Direction:
+
+* Strong interest in using:
+
+  * 3D printer control boards
+  * G-code motion control
+  * printer-style steppers/endstops
+* Potentially manageable architecture:
+
+  * carousel stepper
+  * gantry motion
+  * Z lift
+  * water solenoid
+  * steam relay
+  * fan control
+  * temperature monitoring
+
+Key Realization:
+The autonomous manipulation system is becoming more complex than the feeder itself. Future development should carefully separate:
+
+* minimum viable sterilization capability
+  from
+* fully autonomous refill/reassembly ambitions.
+
+Visualization / Design Workflow Notes:
+
+* User explicitly requested theory-first workflow.
+* Do not generate sketches/renders unless explicitly requested.
+* Prioritize:
+
+  * feasibility
+  * failure modes
+  * sanitation
+  * thermals
+  * manufacturability
+  * maintenance burden
+    before visual exploration.
+
+Project Status:
+Theory and architecture stage only. No STL generation yet. Current focus is reducing mechanical/sanitation complexity before committing to CAD architecture.

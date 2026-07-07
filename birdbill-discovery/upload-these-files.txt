@@ -1,0 +1,12 @@
+﻿Upload or share this whole folder:
+D:\birdbill\output\debug\birdbill-discovery-20260707-134503
+
+Most important files inside it:
+- status.txt
+- key-paths-check.txt
+- directory-tree-depth-4.txt
+- source-config-inventory.csv
+- likely-module-classification.csv
+- python-env-check.txt
+
+The all-files-inventory.csv may be larger. Include it if convenient.

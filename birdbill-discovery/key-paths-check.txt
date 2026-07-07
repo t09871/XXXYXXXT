@@ -1,0 +1,22 @@
+﻿key_path,exists,type,bytes,modified
+"D:\birdbill",True,directory,,2026-07-07 13:31:41
+"D:\birdbill\app",True,directory,,2026-07-07 01:20:38
+"D:\birdbill\app\SmartFrameSampler.py",True,file,20405,2026-07-07 01:19:48
+"D:\birdbill\debug",True,directory,,2026-07-07 13:44:49
+"D:\birdbill\output",True,directory,,2026-07-03 09:20:54
+"D:\birdbill\output\debug",True,directory,,2026-07-07 13:45:03
+"D:\birdbill\output\cache",False,missing,,
+"D:\birdbill\output\cache\SmartFrameSampler",False,missing,,
+"D:\birdbill\modules",True,directory,,2026-07-03 09:20:54
+"D:\birdbill\modules\megadetector",True,directory,,2026-07-06 14:59:31
+"D:\birdbill\modules\megadetector\megadetector-env\Scripts\python.exe",True,file,274712,2026-07-06 14:59:31
+"D:\birdbill\modules\megadetector\models\MDV6b-yolov9-c.pt",True,file,51572347,2026-06-18 16:08:17
+"D:\birdbill\modules\dlc",True,directory,,2026-07-03 09:20:54
+"D:\birdbill\modules\dlc\billtip",True,directory,,2026-07-06 13:23:22
+"D:\birdbill\modules\dlc\billtip\billtip-HB-2026-06-30",True,directory,,2026-07-07 02:39:18
+"D:\birdbill\modules\dlc\billtip\billtip-HB-2026-06-30\config.yaml",True,file,1229,2026-07-06 13:23:38
+"D:\birdbill\modules\speciesnet",True,directory,,2026-07-06 13:51:35
+"D:\birdbill\modules\speciesnet\speciesnet-env\Scripts\python.exe",True,file,274424,2026-06-20 00:36:26
+"D:\birdbill\.venv\Scripts\python.exe",True,file,274712,2026-07-06 13:40:55
+"C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe",True,file,93184,2026-06-10 20:31:15
+"C:\Users\autom\miniconda3\envs\openmmlab\python.exe",True,file,108304,2024-10-03 08:29:17

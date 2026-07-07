@@ -1,0 +1,55 @@
+﻿Python environment checks
+database_mutation=false
+durable_evidence_written=false
+media_files_written=0
+
+========================================================================
+python=D:\birdbill\.venv\Scripts\python.exe
+exists=True
+version_exit_code=0
+version_output=Python 3.11.9
+self_report_exit_code=0
+self_report_output:
+  executable=D:\birdbill\.venv\Scripts\python.exe
+  version=3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]
+
+========================================================================
+python=D:\birdbill\modules\megadetector\megadetector-env\Scripts\python.exe
+exists=True
+version_exit_code=0
+version_output=Python 3.11.9
+self_report_exit_code=0
+self_report_output:
+  executable=D:\birdbill\modules\megadetector\megadetector-env\Scripts\python.exe
+  version=3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]
+
+========================================================================
+python=D:\birdbill\modules\speciesnet\speciesnet-env\Scripts\python.exe
+exists=True
+version_exit_code=0
+version_output=Python 3.12.10
+self_report_exit_code=0
+self_report_output:
+  executable=D:\birdbill\modules\speciesnet\speciesnet-env\Scripts\python.exe
+  version=3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+
+========================================================================
+python=C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe
+exists=True
+version_exit_code=0
+version_output=Python 3.10.20
+self_report_exit_code=0
+self_report_output:
+  executable=C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe
+  version=3.10.20 | packaged by conda-forge | (main, Jun 11 2026, 03:28:51) [MSC v.1944 64 bit (AMD64)]
+
+========================================================================
+python=C:\Users\autom\miniconda3\envs\openmmlab\python.exe
+exists=True
+version_exit_code=0
+version_output=Python 3.8.20
+self_report_exit_code=0
+self_report_output:
+  executable=C:\Users\autom\miniconda3\envs\openmmlab\python.exe
+  version=3.8.20 (default, Oct  3 2024, 15:19:54) [MSC v.1929 64 bit (AMD64)]
+

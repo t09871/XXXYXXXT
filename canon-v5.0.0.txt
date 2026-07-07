@@ -1,0 +1,1559 @@
+canon.txt | Birdbill Unified Canon / Inventory v5.0.0 | 2026-07-07 PDT
+Status: CURRENT ACTIVE CHALKBOARD FOR BIRDBILL CLEAN REWRITE
+Replacement mode: WHOLE-FILE REPLACEMENT. Do not append amendments. Increment version and replace the full file.
+Primary audience: GPT / assistant state reconstruction. Human readability is secondary to preventing rediscovery, stale assumptions, and debug loops.
+Supersedes: canon.txt | HBMR / Birdbill v3.2.0 | 2026-07-02 PDT; canon.txt | HBMR v1.0 | 2026-06-18 PDT historical accumulation.
+Current user-facing project name: Birdbill
+Historical project/root name: HBMR
+Current live rewrite root: D:\birdbill
+Historical/archive root: D:\HBMR
+Current date context for this canon: 2026-07-07 PDT
+
+========================================================================
+0. READ FIRST — ASSISTANT OPERATING RULES
+========================================================================
+
+This file is the one-file source of truth for current Birdbill planning, coding, debugging, inventory, environments, file formats, known traps, and architecture contracts.
+
+RULE 0.1 — CURRENT UPLOADED CANON WINS
+When the user uploads a current canon.txt or canon replacement, use it as the source of truth. Do not substitute memory, stale summaries, old search results, or earlier canon versions unless explicitly asked to recover history.
+
+RULE 0.2 — WHOLE FILE REPLACEMENTS ONLY
+Canon updates must be whole-file replacements with a clean incremented header. Do not append amendment chains. Do not leave contradictory historical sections mixed with current truth unless they are explicitly quarantined as archive.
+
+RULE 0.3 — ASK QUESTIONS BEFORE GUESSING
+The user is collaborating and can predict many debug paths and failures. Ask questions when uncertain. The user explicitly said they will not be mad if asked. Do not avoid questions by inventing paths, schemas, formats, or pipeline order.
+
+RULE 0.4 — STOP IF DEBUG PATH LOOKS LONG
+If a planned module/debug path is likely to exceed 10 debug iterations because of module count, dependencies, file volume, project-root assumptions, migration complexity, unknown schema/API behavior, or uncertain native file formats, STOP BEFORE CODING and consult the user.
+
+RULE 0.5 — INSPECT CURRENT WORKING ARTIFACTS FIRST
+Before writing wrappers or bridges, inspect current source files, project folders, config files, native output artifacts, metadata files, and interpreter/API signatures. Writing an inspector is acceptable, but source/artifact inspection must come before speculative wrapper iteration.
+
+RULE 0.6 — HUMAN DEBUG BANDWIDTH IS LIMITED
+A 300-step debug path may be easy for GPT but expensive for the user. Every debug step costs human keystrokes: download, copy, rename, run PowerShell, copy output, upload output, re-explain context. Optimize to reduce human file handling and repeated teaching.
+
+RULE 0.7 — DO NOT REDISCOVER KNOWN FACTS
+Known facts such as “DLC native prediction data is H5/MultiIndex, CSV is secondary/debug/interchange” must be preserved here and used. Do not rediscover them by failed code.
+
+RULE 0.8 — NO ARBITRARY FILESIZE LIMIT
+Canon is optimized for GPT state reconstruction, not arbitrary size limits. It may be large. Prefer complete state visibility over aggressive compression. Future refactors may add concise tables plus detailed blocks to save space, but do not omit critical debug facts to hit a target size.
+
+RULE 0.9 — NO CODE BEFORE PIPELINE POSITION IS CLEAR
+Capability proofs are useful but must not be mistaken for production pipeline position. DLC can run now, but real Birdbill production order may require MMPose/body/bill-base context before DLC billtip evidence is merged.
+
+RULE 0.10 — FULL-FILE CODE REPLACEMENTS
+For coding sessions, use full-file replacements. Avoid line patches. Versioned debug filenames are acceptable during smoke/debug; canonical filenames are preferred after promotion.
+
+RULE 0.11 — NO FILENAME REUSE FOR USER DOWNLOADS
+In a conversation, do not reuse artifact filenames for downloadable files. Increment version or choose a new name.
+
+RULE 0.12 — STATUS MUST DISTINGUISH SEMANTIC FAILURES
+A script can run and still be wrong. Use PASS, FAIL, PARTIAL, and SEMANTIC_FAIL or FAIL_SCHEMA_* where appropriate. Example: Step 9 CSV bridge ran, but was semantically wrong because it did not extract DLC billtip points from the H5-native artifact.
+
+========================================================================
+1. CURRENT 10,000-FT BIRDBILL PIPELINE
+========================================================================
+
+Birdbill is transitioning from ad hoc crop similarity toward pose-aware localized biological evidence reconstruction.
+
+CURRENT CONCEPTUAL PIPELINE:
+
+source media / raw video
+→ Smart Frame Sampler
+→ MegaDetector / detector evidence
+→ crop generation and crop retention scoring
+→ MMPose broad pose / body scaffold / bill-base candidate
+→ DLC billtip specialist evidence
+→ merged labeled observation record
+→ Smart Cropper / AutoRefine anatomical evidence crops
+→ biometrics eligibility and measurement signals
+→ AutoSort / fusion scoring / candidate ranking
+→ Identity Lab / reconciliation GUI
+→ profiles, community, reports
+→ optional BirdImager/Bird3D paired-camera evidence layer later
+
+Core principle:
+observe first, reconcile later.
+
+Human work should be used mainly for correction, validation, reconciliation, and debugging, not as a blocking default workflow.
+
+IMPORTANT PIPELINE POSITION CORRECTION:
+The recent DLC smoke/inspector work was a capability proof, not the real production pipeline position. DLC belongs after crop generation and often after MMPose/body/bill-base context. DLC-only mode may be supported as an optional branch, but the intended strongest full pipeline is MMPose scaffold → DLC billtip → merged labeled observation → AutoRefine.
+
+OPTIONAL POSE MODES BIRDBILL SHOULD EVENTUALLY SUPPORT:
+
+1. MMPose-only mode
+   Role: broad body/keypoint hints; weak for exact hummingbird bill parts but useful as anatomical scaffold.
+
+2. DLC-only mode
+   Role: specialist keypoints when a DLC project is trained for the relevant crop/frame style. Can run on MegaDetector crop outputs.
+
+3. MMPose → DLC billtip mode
+   Role: MMPose supplies broad body/bill-base scaffold; DLC refines bill_tip and/or precise bill_base. Likely strongest for bill measurement but should not be the only possible path.
+
+4. Future paired-camera / 3D mode
+   Role: paired 2D keypoints, sync metadata, triangulation. Not minimum functional Birdbill.
+
+ARCHITECTURE RULE:
+Detection produces bird candidates. Pose modules attach evidence to candidates. AutoRefine consumes whichever evidence exists. Fusion scoring consumes refined crops plus evidence. GUI allows inspection, correction, and commit.
+
+Do not hardcode production Birdbill as: detection → MMPose → DLC → everything else must depend on this exact chain. That path is too brittle.
+
+========================================================================
+2. CURRENT DEBUG STATUS / VALIDATED STEPS
+========================================================================
+
+Main pipeline smoke/debug spine validated so far:
+
+Step 1 — Smart Frame Sampler smoke: PASS
+Step 2 — Smart Frame Sampler audit: PASS
+Step 3 — MegaDetector provenance/wrapper fix: PASS
+Step 4 — MegaDetector detector-input / balanced preview sequence policy: PASS
+Step 5 — Retention / Crop Scoring: PASS
+Step 7 — SmartFrameSampler app promotion: PASS
+
+Capability proofs / side quests validated:
+
+DLC Step 6 — DLC billtip inference smoke: PASS
+DLC Step 8 — DLC billtip project inspector/reader: PASS
+DLC H5 artifact inspection: PASS (manual/assistant inspection of uploaded H5)
+
+Retired / invalid / do-not-build-on:
+
+Step 9 v0.1 CSV bridge: RETIRED / SEMANTIC_FAIL
+Reason: script ran but treated flat wrapper CSV as canonical coordinate source; quality_summary showed all billtip rows missing. Correct bridge must be H5-first and parse pandas/HDF5 DLC MultiIndex predictions.
+
+CURRENT NEXT TRUE PIPELINE GATE:
+Do not continue writing DLC bridge code until current source/artifacts are inspected and the main pipeline position is restored. The next true production pipeline gate is likely MMPose inspection/smoke or a current-state inventory pass, not further DLC expansion.
+
+========================================================================
+3. CURRENT KNOWN DIRECTORY / PATH INVENTORY
+========================================================================
+
+CURRENT LIVE REWRITE ROOT:
+D:\birdbill
+
+HISTORICAL / ARCHIVE ROOT:
+D:\HBMR
+
+Rule:
+No new live Birdbill contract should point to D:\HBMR unless explicitly marked historical, archival, legacy source, or manually selected test input.
+
+DEBUG SCRIPT WORKSPACE:
+D:\birdbill\debug
+
+DEBUG OUTPUT WORKSPACE:
+D:\birdbill\output\debug
+
+PROMOTED APP MODULE WORKSPACE:
+D:\birdbill\app
+
+CURRENT PROMOTED APP MODULE KNOWN FROM UPLOAD:
+D:\birdbill\app\SmartFrameSampler.py
+Source uploaded as SmartFrameSampler.py v0.3.
+
+CURRENT DLC BILLTIP PROJECT PATH:
+D:\birdbill\modules\dlc\billtip\billtip-HB-2026-06-30
+
+CURRENT DLC BILLTIP CONFIG:
+D:\birdbill\modules\dlc\billtip\billtip-HB-2026-06-30\config.yaml
+
+CURRENT DLC BILLTIP TRAINING METADATA:
+D:\birdbill\modules\dlc\billtip\billtip-HB-2026-06-30\training-datasets\iteration-0\UnaugmentedDataSet_billtipJun30\metadata.yaml
+
+CURRENT DLC DEBUG OUTPUT EXAMPLE FROM PASS RUN:
+D:\birdbill\output\debug\dlc-billtip-20260707-023859
+
+CURRENT DLC INSPECTOR OUTPUT EXAMPLE FROM PASS RUN:
+D:\birdbill\output\debug\inspect-dlc-billtip-project-20260707-030032
+
+CURRENT STEP 9 BAD/RETIRED BRIDGE OUTPUT EXAMPLE:
+D:\birdbill\output\debug\dlc-billtip-bridge-20260707-045235
+
+CURRENT MEGADETECTOR PROJECT PATHS:
+MegaDetector interpreter:
+D:\birdbill\modules\megadetector\megadetector-env\Scripts\python.exe
+
+MegaDetector model:
+D:\birdbill\modules\megadetector\models\MDV6b-yolov9-c.pt
+
+CURRENT DLC INTERPRETER:
+C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe
+
+CURRENT MMPose / OpenMMLab INTERPRETER FROM LEGACY/PLANNING CANON:
+C:\Users\autom\miniconda3\envs\openmmlab\python.exe
+
+CURRENT SPECIESNET INTERPRETER FROM CANON:
+D:\birdbill\modules\speciesnet\speciesnet-env\Scripts\python.exe
+
+MINICONDA ROOT VALIDITY:
+C:\Users\autom\miniconda3 remains valid infrastructure. Do not move working Miniconda environments merely for cleanliness unless deliberately planned.
+
+========================================================================
+4. ENVIRONMENT / VENV INVENTORY
+========================================================================
+
+RULE:
+Use explicit interpreter paths for ML/module subprocesses. Do not rely on ambiguous global python resolution for fragile environments.
+
+CORE BIRDBILL / DEBUG PYTHON:
+Known from Step 9 run:
+D:\birdbill\.venv\Scripts\python.exe
+Version observed: Python 3.11.9
+Role: core debug/app scripts that do not require specialized ML stacks.
+
+SMART FRAME SAMPLER DEPENDENCIES:
+Interpreter: core Birdbill Python unless otherwise specified.
+Requires: cv2 / OpenCV importable in selected Python.
+Observed code imports: argparse, configparser, csv, json, math, re, shutil, sys, traceback, dataclasses, datetime, pathlib, typing, cv2.
+Failure mode: OpenCV import failure raises RuntimeError with message that SmartFrameSampler needs cv2 in selected Python environment.
+
+MEGADETECTOR ENVIRONMENT:
+Interpreter:
+D:\birdbill\modules\megadetector\megadetector-env\Scripts\python.exe
+Model:
+D:\birdbill\modules\megadetector\models\MDV6b-yolov9-c.pt
+Role: MegaDetector / PytorchWildlife. Do not debug MegaDetector dependencies one package at a time in core env.
+Known nonblocking warning: pkg_resources deprecation warnings may appear through older dependency chains; treat as watch item unless runtime failure.
+
+DLC ENVIRONMENT:
+Interpreter:
+C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe
+Validated Step 8:
+Python 3.10.20
+DeepLabCut 3.0.0
+torch 2.12.1+cpu
+numpy 1.26.4
+pandas 2.3.3
+yaml 6.0.3
+TensorFlow absent / import fail; current DLC project uses PyTorch engine.
+Role: DLC billtip inference/training/project reading.
+
+MMPose / OPENMMLAB ENVIRONMENT:
+Interpreter known from canon:
+C:\Users\autom\miniconda3\envs\openmmlab\python.exe
+Validated legacy stack from old canon:
+Python 3.8
+torch 2.4.1+cpu
+mmpose functional
+mmcv functional
+mmdet==3.0.0 required
+Known risk: OpenMMLab stack is version-fragile. Use explicit interpreter/config/checkpoint. Do not rely on global Python.
+
+SPECIESNET ENVIRONMENT:
+Interpreter from current canon:
+D:\birdbill\modules\speciesnet\speciesnet-env\Scripts\python.exe
+Role: optional SpeciesNet / AI detection diagnostics.
+
+DINO / VISUALID DEPENDENCIES FROM LEGACY CANON:
+torch
+torchvision
+transformers
+pillow
+Model: facebook/dinov2-small
+Status: de-emphasized as primary identity engine due background/lighting/crop-framing sensitivity.
+
+UNKNOWN / NEEDS INSPECTION BEFORE CODE:
+Any current librosa dependency must be inventoried before use. Do not assume which Birdbill module needs librosa unless current source inspection proves it.
+
+========================================================================
+5. FILE FORMAT / ARTIFACT INVENTORY
+========================================================================
+
+SMART FRAME SAMPLER OUTPUTS:
+Native app/debug outputs from SmartFrameSampler v0.3:
+- sampled-frames.csv
+- sampled-frames.jsonl
+- manifest.json
+- SmartFrameSampler-storage-ledger.json
+- status.txt
+- preview-frames/*.jpg when materialized
+
+SmartFrameSampler outputs are cache/debug/provenance artifacts, not final bird identity evidence. Manifest reports database_mutation=false, durable_evidence_written=false, broad_media_export=false, outputs_are_purgeable=true.
+
+MEGADETECTOR OUTPUTS:
+Consumes sampled frames / image inputs.
+Emits normalized detector rows and crop files depending wrapper.
+Canonical normalized detection fields:
+class_name, class_id, confidence, x1, y1, x2, y2
+Expanded geometry/provenance fields are required in vNext.
+Do not consume raw PytorchWildlife objects outside MegaDetector boundary.
+
+RETENTION / CROP SCORING OUTPUTS:
+Known current downstream file from Step 5:
+bird-candidates.csv
+Role: candidate crop/retention scoring output for downstream pose/DLC experiments.
+Caution: candidate scoring is not final durable evidence.
+
+DLC NATIVE PREDICTION ARTIFACT:
+Native DLC predictions are HDF5 .h5 pandas tables.
+Observed uploaded file:
+DLC_Resnet50_billtipJun30shuffle1_snapshot_best-20.h5
+Key: /df_with_missing
+Shape: 118 rows x 6 columns
+Index levels: labeled-data / billtip / image filename
+Column levels: scorer / individuals / bodyparts / coords
+Scorer: DLC_Resnet50_billtipJun30shuffle1_snapshot_best-20
+Individual: individual1
+Bodyparts: bill_base, bill_tip
+Coords: x, y, likelihood
+Read pattern:
+df = pandas.read_hdf(path, key="df_with_missing")
+
+DLC H5 COLUMNS TO READ:
+(scorer, individual1, bill_base, x)
+(scorer, individual1, bill_base, y)
+(scorer, individual1, bill_base, likelihood)
+(scorer, individual1, bill_tip, x)
+(scorer, individual1, bill_tip, y)
+(scorer, individual1, bill_tip, likelihood)
+
+DLC H5 OBSERVED SUMMARY FROM UPLOADED ARTIFACT:
+bill_base likelihood min approximately 0.4116
+bill_base likelihood mean approximately 0.6060
+bill_base likelihood max 1.0000
+bill_tip likelihood min approximately 0.1384
+bill_tip likelihood mean approximately 0.5904
+bill_tip likelihood max approximately 0.8638
+bill length px min approximately 23.75
+bill length px mean approximately 45.58
+bill length px max approximately 77.37
+both bill_base and bill_tip likelihood >= 0.4: 110 / 118
+both >= 0.6: 34 / 118
+both >= 0.8: 3 / 118
+
+DLC CSV TYPES — DO NOT CONFUSE:
+1. DLC optional coordinate CSV may be exported from predictions, but H5 is canonical/native.
+2. Uploaded file DLC_Resnet50_billtipJun30shuffle1_snapshot_best-20-results.csv is training/evaluation metrics, not point coordinates. Its columns are:
+%Training dataset, Shuffle number, Training epochs, Detector epochs (TD only), pcutoff, train rmse, train rmse_pcutoff, train mAP, train mAR, test rmse, test rmse_pcutoff, test mAP, test mAR
+Observed row:
+0.95, 1, 20, -1, 0.6, 3.95, 3.13, 24.76, 39.91, 2.98, 2.36, 58.94, 65.0
+3. Step 6 wrapper records CSV is a debug wrapper artifact, not canonical DLC coordinate source.
+
+DLC TRAINING METADATA:
+metadata.yaml from Step 8 preview contains shuffle:
+billtipJun30-trainset95shuffle1
+train_fraction: 0.95
+index: 1
+split: 1
+engine: pytorch
+
+MMPose OUTPUTS FROM LEGACY CANON:
+mmpose-predictions.json
+mmpose-predictions.csv
+visuals/
+mmpose-report.html
+Status: legacy/prototype validated; current D:\birdbill migration needs inspection.
+
+BILLTIP TRAINER OUTPUTS FROM UPLOADED SOURCE / CANON:
+CSV/JSON training/review exports.
+Premium/training rows should be human-approved. Imported model predictions are review/provenance hints, not gold labels.
+
+PROFILE OUTPUTS:
+Profiles are derived/rebuildable state.
+Examples:
+output\profiles\index.html
+output\profiles\{profile-name}.html
+output\profiles\data\{profile-name}\profile.json
+output\profiles\data\{profile-name}\events.csv
+output\profiles\data\{profile-name}\hero.jpg
+output\profiles\data\{profile-name}\best-crops\
+
+DATABASE:
+Legacy/current canonical DB name from canon:
+output\database\mr-review.db
+Primary table:
+crop_queue
+Future vNext may revise schema but must preserve source geometry/provenance.
+
+========================================================================
+6. MODULE QUICK TABLE
+========================================================================
+
+Module | Status | Interpreter | Inputs | Native / important outputs | Production position | Known traps
+
+SmartFrameSampler | v0.3 promoted app PASS | D:\birdbill\.venv\Scripts\python.exe if cv2 present | source video | sampled-frames.csv/jsonl, manifest.json, storage ledger, preview jpg cache | pipeline step 1 | cache not durable evidence; default app output root is cache path, debug wrappers may use output\debug
+
+MegaDetector | smoke/provenance PASS | D:\birdbill\modules\megadetector\megadetector-env\Scripts\python.exe | sampled frames/full frames | normalized detections and crops | after sampler | preserve all geometry; person detections near hand-feeding are context not automatic failure
+
+Retention/Crop Scoring | PASS | core/debug env | detector rows/crops | bird-candidates.csv and scoring reports | after detector | candidate evidence only, not final truth
+
+MMPose | legacy/prototype validated, current migration not yet smoke-passed in D:\birdbill | C:\Users\autom\miniconda3\envs\openmmlab\python.exe | crops or frames | JSON/CSV keypoints, overlays | before merged observation and often before DLC | OpenMMLab version fragility; bird semantics weak; inspect existing source before coding
+
+DLC billtip | capability proof PASS, project inspector PASS | C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe | images/crops, DLC project config | H5 /df_with_missing MultiIndex predictions | specialist bill evidence after crop/MMPose context or optional DLC-only | H5-first; config/project-root sensitive; analyze_time_lapse_frames has no destfolder
+
+Labeled Observation | concept, not production-passed | core env TBD | detector + crop + MMPose + DLC evidence | merged evidence CSV/JSONL/DB rows later | after pose modules | must preserve provenance and confidence; do not let each module invent isolated schema
+
+Smart Cropper / AutoRefine | concept/legacy GUI direction, not current-pass | TBD | merged keypoints and crops | refined evidence crops | after labeled observation | refined crops derived, raw detector crop remains canonical evidence
+
+AutoSort / Fusion | concept | TBD | refined crops + evidence + scores | candidate rankings | after AutoRefine | should propose, not final-assign; DINO alone not enough
+
+Identity Lab / cleanupGUI | legacy/current core concept | core GUI env | crop/evidence DB | reconciliation mutations, action log, profile rebuild | after evidence generation | undo/backup storage risk; identities provisional
+
+billtipTrainerGUI | uploaded source v0.6.0, not yet promoted to D:\birdbill\app at Step 8 | likely core GUI + external MMPose/DLC paths | crops + prediction hints | human-approved billtip training exports | training/review side tool | old D:\HBMR path remains in uploaded source; predictions are hints not labels
+
+Profiles | legacy concept | core env | reviewed/active crop_queue/evidence | derived profile pages | after reconciliation | derived/rebuildable; exclude false_positive/junk/low_quality
+
+SpeciesNet / AI Detection | optional diagnostic | D:\birdbill\modules\speciesnet\speciesnet-env\Scripts\python.exe | crops/images | species predictions | optional diagnostics | not core identity blocker
+
+BirdImager / Bird3D | standby | TBD | paired camera observations + keypoints | triangulated measurements, optional fitted mesh | future after 2D keypoints stable | do not implement now; no separate keypoint training path
+
+========================================================================
+7. MODULE CARD — SmartFrameSampler
+========================================================================
+
+Canonical promoted app module:
+D:\birdbill\app\SmartFrameSampler.py
+Uploaded source header:
+SmartFrameSampler.py | v0.3 | 2026-07-07 PDT | Birdbill Step 7 promoted SmartFrameSampler app module
+
+Purpose:
+video/photo source in → sampled frame records and bounded preview frame cache out.
+
+Current role:
+Pipeline step 1. It owns source-video metadata reading, frame plan selection, burst frame selection, preview materialization, manifest writing, and storage ledger writing.
+
+It does NOT own:
+MegaDetector, DLC, MMPose, identity assignment, DB mutation, durable evidence writing.
+
+Script constants:
+SCRIPT_NAME = SmartFrameSampler.py
+SCRIPT_VERSION = v0.3
+REWRITE_STEP = 7
+COMPONENT_NAME = SmartFrameSampler
+
+SamplerSettings dataclass fields and defaults:
+sample_every_seconds = 2.0
+max_frame_records = 120
+burst_offsets_seconds = (-0.12, 0.0, 0.12)
+preview_frame_limit = 24
+jpeg_quality = 92
+clear_output = False
+source_media_context = app_sampler
+
+Settings file section consumed:
+[video]
+
+Settings keys consumed / recognized:
+sample_every_seconds
+max_frame_records
+max_frames_per_video fallback
+burst_offsets_seconds
+preview_frame_limit
+jpeg_quality
+clear_old_sampled_frames
+source_media_context
+
+CLI args:
+--source required
+--output-root default D:\birdbill\output\cache\SmartFrameSampler
+--run-id
+--settings
+--source-media-context
+--sample-every-seconds
+--max-frame-records
+--burst-offsets-seconds
+--preview-frame-limit
+--jpeg-quality
+--clear-output
+
+FrameRecord fields:
+frame_id
+sequence_id
+source_video
+source_media_context
+source_video_is_canonical
+source_video_available
+source_frame_index
+frame_time_seconds
+anchor_index
+anchor_time_seconds
+burst_index
+burst_offset_seconds
+is_anchor
+frame_path
+frame_materialized
+frame_cache_role
+purgeable
+width
+height
+fps
+duration_seconds
+total_source_frames
+sync_session_id
+synced_time_ms
+calibration_id
+feeder_zone_id
+
+Output files:
+sampled-frames.csv
+sampled-frames.jsonl
+manifest.json
+SmartFrameSampler-storage-ledger.json
+status.txt
+preview-frames/*.jpg when materialized
+
+Storage semantics:
+source_video_is_canonical = True
+source_video_available = True
+frame_cache_role = bounded_preview_cache or record_only_not_materialized
+purgeable = True
+database_mutation = False
+durable_evidence_written = False
+broad_media_export = False
+outputs_are_purgeable = True
+
+Known dependency:
+OpenCV cv2 must import in selected Python.
+
+Known promoted app default output:
+D:\birdbill\output\cache\SmartFrameSampler
+
+Debug wrappers may use:
+D:\birdbill\output\debug\smart-frame-sampler-... or similar.
+
+Do not confuse app default cache output with debug smoke output.
+
+========================================================================
+8. MODULE CARD — MegaDetector
+========================================================================
+
+Canonical module:
+megadetector.py / migrated wrapper components under D:\birdbill as appropriate.
+
+Owns:
+MegaDetector model loading
+local detector model path
+raw detector call
+detector confidence/class filtering
+bounding-box normalization
+crop padding
+animal crop export
+
+Canonical model family:
+MDV6 YOLOv9c
+
+Current local model:
+D:\birdbill\modules\megadetector\models\MDV6b-yolov9-c.pt
+
+Current interpreter:
+D:\birdbill\modules\megadetector\megadetector-env\Scripts\python.exe
+
+Canonical normalized detection fields:
+class_name
+class_id
+confidence
+x1
+y1
+x2
+y2
+
+Expanded vNext geometry/provenance fields needed:
+source_video
+frame_path
+source_frame_index
+frame_time_seconds
+timestamp / synced timestamp later
+detection_id
+class_name
+class_id
+confidence
+bbox_x1
+bbox_y1
+bbox_x2
+bbox_y2
+bbox_width
+bbox_height
+bbox_center_x
+bbox_center_y
+bbox_area_px
+crop_path if exported
+crop_padding_px
+crop_to_frame_offset_x
+crop_to_frame_offset_y
+crop_to_frame_scale_x
+crop_to_frame_scale_y
+
+Important boundary:
+Other modules consume normalized detection/crop outputs, not raw PytorchWildlife detector objects.
+
+Important behavior:
+When a bird is landed on the user's finger/hand, full frames may detect person/human and may miss or de-emphasize bird. Person/vehicle/other detections should be preserved as context geometry, not sent to DLC.
+
+Downstream roles:
+animal = candidate bird evidence
+person = human/context geometry
+vehicle = likely false positive or irrelevant context
+other = context/review
+
+Do not treat MegaDetector crop as biological truth. It is detector evidence.
+
+========================================================================
+9. MODULE CARD — Retention / Crop Scoring
+========================================================================
+
+Current status:
+PASS in clean rewrite smoke sequence.
+
+Role:
+Scores detector outputs/crops and decides candidate downstream use classes.
+
+Known Step 5 PASS facts from current conversation:
+source video was canonical debug source.
+input_detection_rows = 24
+animal_detections = 2
+person_detections = 22
+vehicle_detections = 0
+other_detections = 0
+bird_candidate_rows = 2
+context_detection_rows = 22
+best_count = 2
+usable_count = 0
+weak_debug_count = 0
+discardable_count = 0
+dlc_candidate_count = 2
+mmpose_candidate_count = 2
+
+Output examples:
+retention_scores_csv
+bird-candidates.csv
+
+Important:
+Retention/crop scoring chooses candidates for downstream modules but does not finalize durable evidence or identity truth.
+
+========================================================================
+10. MODULE CARD — DLC billtip
+========================================================================
+
+Role:
+Specialist bill_base / bill_tip keypoint source for usable bird crops/images.
+
+Current status:
+Capability proof PASS.
+Project inspector PASS.
+H5 artifact inspection PASS.
+Not yet integrated at correct production pipeline position.
+
+Current project path:
+D:\birdbill\modules\dlc\billtip\billtip-HB-2026-06-30
+
+Current config path:
+D:\birdbill\modules\dlc\billtip\billtip-HB-2026-06-30\config.yaml
+
+Current interpreter:
+C:\Users\autom\miniconda3\envs\DEEPLABCUT\python.exe
+
+Validated DLC package:
+DeepLabCut 3.0.0
+
+Validated Step 8 config read:
+Task = billtip
+bodyparts = bill_base, bill_tip
+multianimalproject = false
+individuals = individual1
+TrainingFraction = [0.95]
+snapshotindex = -1
+engine = pytorch
+default_net_type = resnet_50
+default_track_method = ellipse
+scorer = Birdbill
+date = Jun30
+
+Training metadata:
+metadata.yaml exists under training-datasets\iteration-0\UnaugmentedDataSet_billtipJun30
+Known shuffle: billtipJun30-trainset95shuffle1
+train_fraction = 0.95
+index = 1
+engine = pytorch
+
+DLC API signatures observed:
+analyze_time_lapse_frames(config, directory, frametype='.png', shuffle=1, trainingsetindex=0, gputouse=None, device=None, save_as_csv=False, modelprefix='', engine=None)
+No destfolder parameter for analyze_time_lapse_frames.
+
+analyze_videos has destfolder.
+create_labeled_video has destfolder.
+filterpredictions has destfolder.
+
+Native prediction artifact:
+H5, pandas HDF5, key /df_with_missing, MultiIndex.
+
+Do not build coordinate bridge from wrapper CSV unless it is only an auxiliary/debug convenience. The canonical reader must inspect H5.
+
+Known Step 6 DLC smoke result:
+DLC ran on Step 5 bird-candidate crops.
+DLC inference PASS.
+Predictions written beside debug DLC input folder because analyze_time_lapse_frames has no destfolder.
+Output included H5 prediction file and optional CSV when requested.
+No DB mutation.
+No durable evidence.
+Broad media export false.
+media_files_written = 2 (staged/copied input media files in smoke context).
+
+Known failure chronology and lessons:
+- v0.1 failed wrapper-side KeyError Task.
+- v0.2 failed child exit 1 with insufficient logs.
+- v0.3 exposed logs but failed UnicodeEncodeError/BOM console issue.
+- v0.4 fixed encoding and showed config issue: keys contained mojibake/BOM Task.
+- v0.5 sanitized config into debug folder but broke DLC project root inference; could not find shuffles.
+- v0.6 fixed by using temporary sanitized config beside original DLC config and removed it after run; PASS.
+
+Critical DLC lesson:
+For stateful ML project folders, config/model/env are not independent paths. Do not copy config.yaml outside DLC project root for inference unless you know how DLC resolves project_path and metadata. Preserve DLC project-root assumptions.
+
+Current architecture rule:
+Freeze current two-point DLC billtip model as specialist asset. Do not casually expand this project to body/wing landmarks. If broader DLC pose is desired, define a separate project such as birdpose/bodywing.
+
+Future DLC modes to preserve:
+- still crop inference
+- DLC-only optional path
+- MMPose→DLC billtip path
+- video analysis path using analyze_videos
+- labeled video debug overlays
+- filtered prediction path
+- future separate DLC projects
+
+========================================================================
+11. MODULE CARD — MMPose
+========================================================================
+
+Canonical standalone module from current canon:
+mmposeGUI.py
+
+Canonical launcher from current canon:
+mmpose.bat
+
+Legacy working directory from current canon:
+D:\HBMR\mmpose\
+
+Current live rewrite status:
+Needs inspection/migration into D:\birdbill before coding. Do not assume current source state without upload/inspection.
+
+Role:
+Broad pose/keypoint scaffold and anatomical localization for AutoRefine feasibility.
+
+Current model family from canon:
+RTMPose
+
+Dataset/schema from canon:
+AP-10K animal pose
+
+Tested checkpoint from canon:
+rtmpose-m_simcc-ap10k_pt-aic-coco_210e-256x256-7a041aa1_20230206.pth
+
+Tested config from canon:
+rtmpose-m_8xb64-210e_ap10k-256x256.py
+
+Legacy model folder:
+D:\HBMR\mmpose\models\
+
+Legacy output folder:
+D:\HBMR\mmpose\output\
+
+Legacy outputs:
+visuals\
+mmpose-report.html
+mmpose-predictions.json
+mmpose-predictions.csv
+
+Current interpretation:
+AP-10K keypoints are reinterpreted as hummingbird-oriented anatomical proxies.
+
+Likely useful AP-10K mappings from canon:
+0/1 = head anchors
+2 = bill-head front anchor / nose-like anchor
+3 = neck/gorget proxy
+4 = tail base
+5/8 = wing roots
+11/14 = rear-body anchors
+
+Important terminology:
+MMPose nose-like anchor may become bill_base candidate, but do not represent derived bill tip as a native MMPose keypoint.
+
+Important boundary:
+Do not write MMPose experimental outputs into core Birdbill DB until schema stabilizes.
+
+Known risk:
+OpenMMLab dependency fragility. Explicit interpreter required. Source inspection required before wrapper coding.
+
+========================================================================
+12. MODULE CARD — Labeled Observation Record
+========================================================================
+
+Status:
+Central vNext architecture concept. Not yet production-passed.
+
+Purpose:
+One merged evidence record that prevents each module from inventing an incompatible output shape.
+
+Should preserve:
+source video
+source media context
+source frame index
+frame timestamp seconds
+synced_time_ms for future paired-camera workflows
+frame path
+frame cache/durable role
+detector bbox and confidence
+detection class/context
+crop path
+crop-to-frame transform
+MMPose keypoints and scores
+DLC billtip keypoints and likelihoods
+model names and versions
+derived bill vector
+derived bill length px
+bill angle
+pose-quality flags
+measurement eligibility flags
+identity/profile links
+evidence crop links
+calibration_id
+feeder_zone_id
+sync_session_id
+
+Primary consumers:
+Smart Cropper / AutoRefine
+biometrics
+AutoSort / fusion scoring
+Identity Lab
+profiles
+BirdImager/Bird3D
+reports
+
+Rule:
+DLC predictions are model evidence, not human-approved labels. MMPose predictions are model evidence. Detector bboxes are detector evidence. Human review/commit status must be separate.
+
+========================================================================
+13. MODULE CARD — Smart Cropper / AutoRefine
+========================================================================
+
+Canonical standalone module from canon:
+autorefineGUI.py
+
+Purpose:
+Derive anatomical evidence crops from pose/keypoint localization.
+
+Current intended flow:
+raw detector crop
+→ pose inference
+→ Birdbill reinterpretation layer
+→ anatomical evidence extraction
+→ refined evidence crops
+
+Preferred output folders from canon:
+output\autorefine\head
+output\autorefine\throat
+output\autorefine\body
+output\autorefine\tail
+output\autorefine\visuals\
+
+Likely future evidence crops:
+bill crop
+bill-side crop
+head crop
+throat/gorget crop
+body crop
+wing-root crop
+tail-base crop
+body-tight crop
+background-suppressed crop
+
+Important:
+Raw detector crop remains canonical evidence artifact. Refined crops are derived artifacts.
+
+Architectural significance:
+AutoRefine quality strongly affects AutoSort quality. Birdbill should evaluate identity evidence quality, not merely bird presence.
+
+========================================================================
+14. MODULE CARD — AutoSort / Fusion
+========================================================================
+
+Canonical standalone module from canon:
+autosortGUI.py
+
+Purpose:
+Candidate same-bird ranking using local verification systems and evidence fusion.
+
+AutoSort proposes candidate same-bird matches. It does not assign final identities.
+
+Preferred modes:
+all-vs-all
+cross-video only
+query folder vs reference folder
+
+Preferred filters:
+skip same source
+skip nearby timestamps
+top-N candidate ranking
+
+Potential scorer modules:
+LightGlue
+LoFTR
+color/gorget
+bill/body proportions
+temporal continuity
+fusion scoring
+
+Current principle:
+AutoSort should rank evidence and propose candidates. Identity Lab remains reconciliation authority.
+
+DINOv2 alone is de-emphasized as primary identity engine due background/lighting/crop framing sensitivity.
+
+========================================================================
+15. MODULE CARD — Identity Lab / cleanupGUI
+========================================================================
+
+Canonical stable filename:
+cleanupGUI.py
+
+Canonical launcher:
+cleanupGUI.bat
+
+Future public naming:
+Identifier GUI / Identity Lab
+
+Current role:
+Core Birdbill architecture component for reconciliation, not optional tooling.
+
+Owns:
+Bird##### provisional cluster browsing
+crop-level identity reconciliation
+Manual Sorting workspace
+Sandbox / True Names / raw group concepts where active
+crop selection UI
+split selected crops to new Bird#####
+move selected crops to existing Bird#####
+false-positive tagging
+low-quality tagging
+multibird tagging
+junk archive/delete workflow
+cleanup action logging
+DB backup-before-mutation behavior
+visual_embeddings identity synchronization during reassignment
+optional profile rebuild triggering
+
+Does not own:
+detector logic
+DINO internals
+embedding computation
+Bird ID allocation rules
+profile formatting
+MMPose/DLC internals
+
+Identity philosophy:
+Bird##### identities are provisional clusters, not biological truth.
+
+Manual Sorting hotkeys from canon:
+J = junk
+F = false positive
+
+Junk:
+poor-quality or rejected crop material archived/removed from normal evidence flow.
+
+False positive:
+non-bird detector output retained as training/evaluation evidence when useful.
+
+Multibird:
+preserved evidence, not junk. Full many-to-many identity logic deferred.
+
+Low quality:
+preserved but excluded from clean profile evidence.
+
+Known risk:
+Backup-per-action behavior can balloon storage. Future undo should use session backup + reversible action log + periodic snapshots + backup pruning.
+
+========================================================================
+16. MODULE CARD — billtipTrainerGUI
+========================================================================
+
+Canonical standalone module:
+billtipTrainerGUI.py
+
+Uploaded source version known:
+billtipTrainerGUI.py | HBMR / Birdbill Bill Base + Tip Trainer | v0.6.0 | 2026-06-30
+
+Current D:\birdbill app promotion status:
+Missing at D:\birdbill\app\billtipTrainerGUI.py during Step 8 inspector run. Needs deliberate migration/promotion.
+
+Purpose:
+Human-supervised bill-tip training data generation and/or refinement.
+
+Current workflow concept:
+use broad pose or crop context to propose bill_base / candidate bill tip
+user verifies/corrects bill tip
+export training/review data for DLC or related training pipeline
+
+Preferred terminology:
+bill_base
+derived_bill_tip
+bill_tip_candidate
+bill_tip_verified
+
+Do not represent derived bill tip as a native MMPose keypoint.
+
+Uploaded source facts:
+- GPT/model-assisted predictions are review layer, not gold labels.
+- Premium export remains human-approved only.
+- Sampler manifest import uses candidate_path / image_path and does not copy images.
+- Sampler placeholder base points should not be trusted as MMPose output.
+- External MMPose helper pattern uses selected OpenMMLab Python via subprocess.
+- Default output path in uploaded source still pointed to D:\HBMR\output\billtip-training and must be migrated or quarantined before live Birdbill promotion.
+
+Important:
+Do not import DLC predictions as corrected/human-approved labels. They may be review hints/provenance only unless accepted by human workflow.
+
+========================================================================
+17. MODULE CARD — visualid / DINO
+========================================================================
+
+Canonical module:
+visualid.py
+
+Status:
+Legacy/experimental production-facing visual identity boundary. De-emphasized as central future identity engine.
+
+Owns:
+DINOv2 model loading
+crop embedding generation
+embedding normalization
+visual_embeddings storage
+similarity scoring
+threshold decision
+calling autoname.py when new identity is needed
+
+Canonical model:
+facebook/dinov2-small
+
+Canonical model version label:
+dinov2-small-v0.1
+
+Starting threshold from old canon:
+MATCH_THRESHOLD = 0.79
+
+Preferred error mode:
+split identities rather than false-merge identities.
+
+Critical caveat:
+DINOv2 was found to group too strongly by background, lighting, crop framing, blur, feeder context, and similar pose/camera conditions. It should not dominate future architecture.
+
+Canonical table:
+visual_embeddings
+
+Columns from canon:
+id
+crop_path
+identity
+model_name
+model_version
+embedding_json
+created_at
+
+Important:
+visual_embeddings.identity should be synchronized when crop_queue.identity changes.
+
+========================================================================
+18. MODULE CARD — autoname
+========================================================================
+
+Canonical module:
+autoname.py
+
+Purpose:
+Sole authority for provisional Bird identity allocation.
+
+Current canonical emitted format:
+Bird#####
+
+Examples:
+Bird00001
+Bird00002
+Bird00010
+Bird00100
+Bird99999
+
+Canonical range:
+Bird00001 → Bird99999
+
+Canonical helper functions:
+allocate_bird_name(db_path)
+format_bird_name(number)
+is_autoname(identity)
+autoname_number(identity)
+autoname_sort_key(identity)
+
+No other module may:
+generate Bird IDs directly
+manually increment Bird IDs
+assume Bird### format
+assume Bird#### format
+create alphanumeric rollover systems
+create alternate provisional naming systems
+
+All provisional identity creation must flow through:
+autoname.allocate_bird_name(db_path)
+
+Long-term identity roadmap:
+Bird##### is a readable provisional display label. Future large-scale architecture may use UUID-backed internal identity entities with aliases, merge/split history, identity graph edges, and display labels. Do not implement UUID identity architecture yet.
+
+========================================================================
+19. MODULE CARD — profiles
+========================================================================
+
+Canonical module:
+profiles.py
+
+Owns:
+profile generation
+profile index generation
+individual bird pages
+profile data export
+profile image copying
+hero image selection
+derived profile assets
+
+Canonical generated outputs from canon:
+output\profiles\index.html
+output\profiles\{profile-name}.html
+output\profiles\data\{profile-name}\profile.json
+output\profiles\data\{profile-name}\events.csv
+output\profiles\data\{profile-name}\hero.jpg
+output\profiles\data\{profile-name}\best-crops\
+
+Profiles are derived/rebuildable state.
+
+profiles.py should not mutate review database state.
+
+profiles.py should use autoname_sort_key for Bird##### ordering.
+
+Profiles should exclude rows marked:
+identity_status = false_positive
+identity_status = junk
+identity_status = low_quality
+
+Multibird handling:
+preserve separately unless/until relational identity logic exists.
+
+Known old-canon hazard:
+Older profiles.py searched legacy tables before crop_queue. Current code should prefer canonical crop_queue/evidence state, not accidental legacy tables.
+
+========================================================================
+20. MODULE CARD — SpeciesNet / AI Detection
+========================================================================
+
+Status:
+Optional diagnostic tooling.
+
+Interpreter from current canon:
+D:\birdbill\modules\speciesnet\speciesnet-env\Scripts\python.exe
+
+Current architecture priority:
+individual identity reconciliation over species classification.
+
+Species classification should not block the core Birdbill evidence pipeline.
+
+Potential uses:
+advanced diagnostics
+false-positive detection
+optional beta feature
+non-hummingbird filtering experiments
+
+Known previous behavior from project memory:
+SpeciesNet guessed hummingbird crops poorly/weakly in earlier tests. Treat as optional diagnostics until validated.
+
+========================================================================
+21. MODULE CARD — BirdImager / Bird3D
+========================================================================
+
+Current status:
+standby / architectural placeholder.
+
+Do not implement now.
+Do not write BirdImager-specific code yet.
+Do not build a separate BirdImager landmark-training path.
+
+Likely belongs inside Birdbill as a module/subprogram/tightly integrated workflow, not a separate pipeline.
+
+Core idea:
+dual-camera evidence capture using two independent cameras aimed at same feeder/perch area, roughly 45–70 degrees apart, target around 60 degrees.
+
+Initial sync:
+audio slate spike or visible/audible sync cue, not hardware triggering.
+
+Architecture rule:
+dual-camera footage should be both ordinary Birdbill input and specialty paired evidence.
+
+Each camera stream should run independently through:
+raw video
+→ Smart Frame Sampler
+→ MegaDetector crops
+→ shared MMPose/DLC keypoints
+→ labeled observations
+
+Then BirdImager/Bird3D layer may add:
+shared session ID
+camera/source metadata
+sync offset
+synced timestamps
+crop/keypoint pairing
+calibration metadata
+3D keypoint triangulation
+biometrics-ready outputs
+optional fitted mesh/STL records
+
+Critical future field:
+synced_time_ms or equivalent.
+
+Primary value:
+triangulated 3D keypoints and identity-relevant biometrics, not STL generation.
+
+STL/mesh:
+experimental downstream possibility only. Most realistic near-term mesh target is bill-only STL. Any mesh must be labeled fitted/reconstructed evidence, not literal perfect scan.
+
+========================================================================
+22. DATABASE / SCHEMA CONTRACTS
+========================================================================
+
+Canonical current database from canon:
+output\database\mr-review.db
+
+Canonical primary legacy/current table:
+crop_queue
+
+Canonical identity field:
+identity
+
+Legacy/non-canonical identity fields:
+individual_name
+name
+
+Do not restore individual_name or name as primary identity state.
+
+Current autonomous normal state:
+review_status = auto
+identity_status = provisional
+
+Recognized review_status values:
+new
+auto
+reviewed
+skipped
+
+Recognized identity_status values:
+provisional
+active
+false_positive
+multibird
+low_quality
+junk as archive/remove workflow where used
+
+Important future schema direction:
+Future detector/evidence records must preserve geometry and source metadata:
+source_video
+frame_path
+source_frame_index
+frame_time_seconds
+timestamp / synced timestamp
+crop_path
+detector bbox x1/y1/x2/y2
+detector confidence
+crop-to-frame transform
+
+Reason:
+Future multibird, biometrics, BirdImager, and triangulation work require geometry/source provenance.
+
+Important SQLite rule:
+Do not hold an open crop_queue write transaction while calling modules that also write to the same DB, such as visualid.py.
+
+========================================================================
+23. SETTINGS CONTRACT
+========================================================================
+
+Canonical settings file:
+settings.ini
+
+settings.ini owns user-editable runtime configuration.
+
+Current important sections:
+[video]
+[identity]
+[review]
+[training]
+
+Known video keys:
+sample_every_seconds
+max_frames_per_video
+max_frame_records
+jpeg_quality
+clear_old_sampled_frames
+burst_offsets_seconds
+preview_frame_limit
+source_media_context
+
+Known review keys:
+OpenReviewPage
+OpenReviewContactSheet
+ReviewSheetMaxImages
+
+Autonomous bulk-testing default:
+OpenReviewPage = false
+OpenReviewContactSheet = false
+
+Reason:
+avoid review-window spam during autonomous ingestion.
+
+Do not rename settings keys without updating all consumers.
+
+SmartFrameSampler v0.3 reads [video] and supports both max_frame_records and max_frames_per_video fallback.
+
+========================================================================
+24. DEBUG WORKFLOW / PROMOTION RULES
+========================================================================
+
+DEBUG-FIRST THEN PROMOTE:
+1. Standalone debug proof in D:\birdbill\debug
+2. Outputs in D:\birdbill\output\debug\something-[timestamp]
+3. After validation, promote clean logic into D:\birdbill\app
+4. Later rewrite debug script as thin caller of app module
+
+Do not write production app logic with hardcoded output\debug paths and plan later search/replace.
+
+Debug scripts may hardcode debug paths.
+Reusable app modules must accept output paths through settings.ini, CLI parameters, function parameters, or central path resolver.
+
+Every smoke/debug run must report:
+script_name
+script_version
+rewrite_step
+component
+python_executable / external interpreter
+input paths
+output paths
+status = PASS/FAIL/PARTIAL/SEMANTIC_FAIL
+stdout/stderr logs if child process used
+exit code
+database_mutation = true/false
+durable_evidence_written = true/false
+broad_media_export = true/false where relevant
+media_files_written count
+source_video_is_canonical where relevant
+outputs_are_purgeable where relevant
+
+Grouped smoke tests should not stop testing every remaining component just because one fails. Capture stdout, stderr, exit code, and continue when practical.
+
+PowerShell discipline:
+print variables before executing
+run Test-Path before executing
+avoid $input because it is a PowerShell automatic variable
+do not invent test folders or paths
+use agreed variables such as $py, $config, $testdir, $script, $outdir
+
+Stop/consult triggers:
+- unknown native file format
+- unknown current source state
+- unknown project folder layout
+- multiple ML dependencies
+- old HBMR source exists but has not been inspected
+- output schema affects downstream modules
+- likely >10 debug iterations
+- assistant is about to make a broad approximation
+
+========================================================================
+25. STORAGE DISCIPLINE
+========================================================================
+
+Storage discipline is a major rebuild driver.
+
+Observed historical problem:
+output\crops ballooned to roughly 24k images and about 10 GB with only limited input processed.
+
+Architectural conclusion:
+Old output\crops did too many jobs: detector evidence, debug output, training data, profile evidence, processing cache, duplicate archive, and possible durable evidence.
+
+Future architecture must separate:
+source media
+sampled-frame cache
+detector crop cache
+durable evidence crops
+refined evidence crops
+training data
+debug outputs
+reports
+derived profile exports
+
+Canonical truth:
+source media is canonical recoverable truth.
+
+Derived/cache state:
+sampled frames and temporary crops.
+
+Durable evidence:
+selected crops, refined evidence crops, validated profile evidence, BirdImager captures, biometrics-ready outputs.
+
+Future requirement:
+do not keep every generated crop/frame forever by default.
+
+Potential retention policy:
+delete sampled frames after crop generation unless frame retention is enabled for debugging.
+
+SmartFrameSampler v0.3 explicitly marks preview frames and frame records purgeable and non-durable.
+
+========================================================================
+26. KNOWN TRAPS / DO-NOT-REPEAT LESSONS
+========================================================================
+
+DLC H5 TRAP:
+Do not treat wrapper CSV as canonical DLC coordinate source. DLC native predictions are H5 MultiIndex tables.
+
+DLC RESULTS CSV TRAP:
+DLC_...-results.csv may be training/evaluation metrics, not point coordinates.
+
+DLC PROJECT ROOT TRAP:
+Do not copy config.yaml into debug folder for DLC inference unless project_path/model metadata handling is understood. DLC relies on project-root context.
+
+DLC DESTFOLDER TRAP:
+analyze_time_lapse_frames has no destfolder in installed DLC 3.0.0. Predictions may be written beside input images. analyze_videos/create_labeled_video/filterpredictions do have destfolder.
+
+PIPELINE ORDER TRAP:
+DLC capability proof does not mean DLC is the next production step. MMPose/body/bill-base scaffold likely belongs before full DLC integration in main pipeline.
+
+CANON VERSION TRAP:
+Old canon contained many appended updates with internal version conflicts. v5 and later must be whole-file replacements with current truth first and archive quarantined.
+
+OLD ROOT TRAP:
+D:\HBMR references in live modules are migration risks unless explicitly archival/test input. Current live rewrite root is D:\birdbill.
+
+POWERHELL VARIABLE TRAP:
+Do not use $input as a PowerShell variable.
+
+VISUALID/DINO TRAP:
+DINOv2 may group by background, lighting, crop framing, blur, and feeder context. Do not treat it as central future identity engine.
+
+DEBUG-FOREVER TRAP:
+Do not keep making wrappers when source/artifact inspection would answer the question. If >10 debug iterations likely, stop and consult.
+
+HUMAN WORKLOAD TRAP:
+Every extra artifact/file/log passed back and forth costs user keystrokes. Prefer consolidated debug packets, compact status outputs, and one canonical state file.
+
+========================================================================
+27. RETIRED / INVALID DEBUG ATTEMPTS
+========================================================================
+
+Step 9 CSV bridge v0.1:
+Ran but semantically wrong.
+Observed quality_summary:
+rows = 6
+quality_band_counts = {missing: 6}
+dlc_billtip_present_count = 0
+biometrics_eligible_count = 0
+Reason:
+Expected flat coordinate columns in records CSV. Correct source is DLC H5 MultiIndex prediction file.
+Do not build on v0.1 output except as diagnostic of schema failure.
+
+DLC smoke v0.1-v0.5 failures:
+Useful as lessons but not current path.
+Key lessons: encoding/BOM, config Task key, and project-root placement matter.
+
+Generated sketches/images for mechanical/3D workflows:
+Avoid unless explicitly requested. User found sketches unreliable for geometry/numbering continuity. Stick to STL/numeric geometry for 3D mechanical work. This rule is general user preference but relevant if Birdbill generates visuals: use real overlays/diagnostics, not imaginative sketches.
+
+========================================================================
+28. CURRENT OPEN QUESTIONS / HUMAN CHECKPOINTS
+========================================================================
+
+Before next code-heavy step, ask/confirm:
+
+1. Which current MMPose source file/folder should be treated as source of truth?
+2. Is there a current D:\birdbill migration of mmposeGUI.py, or only D:\HBMR legacy?
+3. Should next true pipeline gate be MMPose inspection/smoke, or a no-code source/artifact inventory report?
+4. Should DLC-only mode be designed now as optional, or deferred until after MMPose merge?
+5. What minimum functional Birdbill vertical slice should define “out of debug forever mode”?
+6. Should a collect-debug-packet utility be prioritized to reduce upload/copy burden?
+7. Which current files must be inspected before any GUI/DB work resumes?
+
+========================================================================
+29. FUTURE MINIMUM FUNCTIONAL BIRDBILL TARGET
+========================================================================
+
+Goal:
+A functional program before advanced capability expansion.
+
+MVP spine:
+1. Select/run source video
+2. Smart Frame Sampler
+3. MegaDetector
+4. Crop generation + retention scoring
+5. Optional pose/evidence modules, skip allowed
+6. Merged evidence preview
+7. GUI review / Identity Lab minimal path
+8. Profiles output
+
+Optional evidence modules should not block the whole program:
+MMPose may be absent/weak.
+DLC may be absent/deferred.
+SpeciesNet may be absent/deferred.
+VisualID may be absent/de-emphasized.
+
+Birdbill should still run and produce useful crops/reports/profiles if optional ML modules fail.
+
+========================================================================
+30. ARCHIVE / HISTORICAL NOTES BELOW THIS LINE
+========================================================================
+
+Rules for archive:
+- Do not treat archive sections as current contract if they conflict with sections above.
+- Use archive only for recovery, provenance, and “why did we decide this?” questions.
+- Current sections above win.
+
+ARCHIVE SUMMARY — HBMR v1.0/v2.x ORIGINAL MODULES
+
+settings.ini historical contract:
+settings.ini owned user-editable video sampling/export config.
+Historical keys: sample_every_seconds, max_frames_per_video, jpeg_quality, clear_old_sampled_frames.
+Naming conflict existed: MR vs HBMR.
+
+main.py historical contract:
+Owned video collection, settings loading, frame sampling, main orchestration, database init/repair, crop_queue insertion, review artifact generation, per-video summary, MegaDetector subprocess call.
+Historical canonical DB: output\database\mr-review.db.
+Historical table: crop_queue.
+Historical status: new/reviewed/skipped before autonomous mode changes.
+Current v5 interpretation: old main.py is historical source material; do not assume it is live D:\birdbill app code.
+
+review.py historical contract:
+Originally owned blocking human identity review and new→reviewed/skipped transitions.
+Later autonomous mode de-emphasized blocking review. v5 current rule: review.py must not be reintroduced as blocking naming bottleneck unless explicitly planned.
+
+cleanup.py historical contract:
+Safe identity cleanup, rename, merge, manual row correction, false-positive tagging, training export. cleanupGUI / Identity Lab became preferred current direction.
+
+profiles.py historical contract:
+Generated derived profile pages/index/data. Profiles are rebuildable derived state. Historical hazard: old profiles.py could select legacy tables before crop_queue.
+
+HBMR.bat historical contract:
+Top-level launcher; old process order main.py → review.py → profiles.py. v5 live rewrite has not yet defined final launcher shell.
+
+Autoname historical evolution:
+Bird### → Bird#### base36 idea → Bird##### decimal. Current v5 canonical display label remains Bird#####.
+
+DINO/visualid historical arc:
+DINOv2 explored as visual identity probe and integrated boundary, threshold 0.79, but later de-emphasized because it overuses background/lighting/crop framing.
+
+cleanupGUI historical arc:
+Evolved from cleanup utility toward core Identity Lab / reconciliation workbench with crop-level movement, false-positive/multibird/low-quality/junk categories, and need for undo discipline.
+
+MMPose historical arc:
+Validated as standalone/prototype broad pose scaffold using RTMPose/AP-10K in OpenMMLab env. Major realization: pose localization first, re-ID second.
+
+AutoRefine/AutoSort historical arc:
+Birdbill moved toward pose-aware anatomical evidence crops and local verification/fusion scoring rather than global crop similarity.
+
+BirdImager/Bird3D historical arc:
+Deferred. Should integrate into Birdbill after 2D evidence pipeline is stable, using synced dual-camera observations and triangulated keypoints.
+
+========================================================================
+31. CHANGELOG
+========================================================================
+
+v5.0.0 | 2026-07-07 PDT
+Whole-file replacement. Recasts canon as Unified Canon / Inventory / Debug Chalkboard for GPT state reconstruction. Merges current v3.2 canon, useful historical v1.0/v2.x/v3.x facts, SmartFrameSampler v0.3 promoted app facts, validated Step 1–8 debug status, DLC H5-first correction, Step 9 CSV bridge retirement, stop-and-consult rule, no arbitrary filesize rule, and human-workload minimization rule.
+

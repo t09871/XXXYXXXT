@@ -1,0 +1,161 @@
+Coding Notes | v2026-07-07 | General Debug / Coding / Handoff Rules
+
+Purpose:
+These notes are reusable coding-process rules for future sessions. They are not a project summary, not a canon replacement, and not a module-status log. Project-specific contracts, paths, schemas, module inventories, and debug results belong in the current project canon/chalkboard.
+
+Core collaboration rule:
+The assistant should work with the user, not silently guess through long debug paths. Ask questions before coding when the user likely knows the answer or can predict likely failure modes. The user may be unfamiliar with Python/PowerShell details and prone to typos, but can reason about architecture, program shape, failure paths, and debug strategy.
+
+Current-source rule:
+Before coding or editing, inspect the current user-provided files, current repo/filesystem inventory, and current canon/chalkboard. Do not substitute memory, older uploads, stale summaries, or inferred structure when a current file is available.
+
+Stop-and-consult rule:
+If a planned module/debug path is likely to exceed 10 steps because of module count, dependency complexity, file volume, uncertain schema/API behavior, project-root assumptions, migration complexity, or unclear current state, stop and consult before coding. Do not embark on long debug quests by guessing.
+
+Question rule:
+Ask questions when they reduce likely debug loops. Good questions include:
+
+* Which file is current?
+* Is this module promoted, legacy, debug-only, or retired?
+* Is this path live or archival?
+* Is this output native/canonical or only an export?
+* Should this be a quick proof or a production contract?
+  Do not ask unnecessary questions when the answer is already in provided canon/files/logs.
+
+Human-workload rule:
+Minimize repeated user keystrokes, uploads, path typing, and manual copy/paste. Prefer scripts that produce compact status files, manifests, inventories, summaries, and uploadable packets. Do not ask the user to paste giant directory listings or repeated logs when a discovery script can produce a small report.
+
+Full-file replacement rule:
+For source-code edits, provide full-file replacements unless the user explicitly asks for a patch. Avoid line patches and fragile manual edits. Versioned debug filenames are acceptable during smoke testing. Stable canonical filenames are preferred after promotion.
+
+No filename reuse rule:
+Do not reuse generated artifact filenames within the same working thread. If a file was already produced, increment the version or use a new clear name. This avoids stale browser/download/cache confusion.
+
+Header rule:
+Every script, launcher, canon, summary, and durable text artifact should have a one-line header with filename, project/tool name where applicable, version, date, and purpose. The header syntax should match the file type when placed in code:
+
+* Python: # filename.py | ...
+* PowerShell: # filename.ps1 | ...
+* Batch: REM filename.bat | ...
+* Text: filename.txt | ...
+
+Versioning rule:
+Use clean version increments. Avoid amendment chains inside active working documents. For canon/project-state documents, prefer whole-file replacements with clear version headers. If the document is a current-state chalkboard, old history should be quarantined or summarized, not mixed into current truth.
+
+Canon/chalkboard rule:
+For complex projects, a single large current-state canon may be better than multiple separate files if it reduces user workload. It should be optimized for the assistant: current truth first, then inventories, paths, formats, environment details, debug status, known traps, and archive/historical notes. Do not shrink important facts just to hit an arbitrary filesize.
+
+Flat-repo rule:
+When the user uses GitHub or another public repo as a flat sharing shelf, do not infer runtime directory structure from repo placement. Flattening may be intentional. Original/runtime paths should be preserved in canon, discovery summaries, manifests, or path maps.
+
+Discovery-before-coding rule:
+For large or old projects, run/read a read-only discovery inventory before coding:
+
+* current folder structure
+* source/config file inventory
+* extension summary
+* large folder/file summary
+* likely entrypoints
+* active vs generated/env/archive split
+  Use discovery to avoid guessing paths, modules, and stale files.
+
+PowerShell discipline:
+Use explicit variables and print them before execution. Avoid `$input` because it is a PowerShell automatic variable. Use `Test-Path` before relying on paths. Quote paths. Prefer read-only discovery first. Write outputs to an explicit debug/output folder. Report status clearly.
+
+Recommended PowerShell status pattern:
+status = PASS / FAIL / PARTIAL / SEMANTIC_FAIL
+script_name = ...
+script_version = ...
+source = ...
+output_dir = ...
+database_mutation = true/false
+durable_evidence_written = true/false
+media_files_written = N
+error_type = ...
+error = ...
+
+Semantic failure rule:
+A script can run and still be wrong. Use SEMANTIC_FAIL or an explicit schema/meaning failure status when output exists but does not satisfy the contract. Do not call a run PASS just because it exited successfully.
+
+Smoke-test rule:
+Smoke tests should be small, explicit, and low-mutation. They should record:
+
+* script path
+* interpreter path
+* input path
+* output path
+* exact settings
+* expected output
+* actual output
+* dependency versions if relevant
+* mutation status
+* keep / repair / retire / rebuild recommendation when useful
+
+Debug-first-then-promote rule:
+When behavior is uncertain, standalone debug scripts are acceptable. Once behavior is validated, promote clean reusable logic into the app/module layer, then rewrite debug scripts as thin callers. Do not leave production logic hardcoded to debug folders.
+
+Mutation discipline:
+Always distinguish:
+
+* read-only inspection
+* generated debug outputs
+* purgeable cache
+* durable evidence
+* database mutation
+* source-file mutation
+* media file creation
+  Default to read-only until contracts are clear.
+
+Storage discipline:
+Do not preserve every generated output by default. Separate source media, cache, debug output, durable evidence, derived reports, training data, and archives. Discovery summaries should account for huge output/env/archive folders without embedding every file.
+
+Native-format rule:
+Before writing bridges/parsers, identify the native source-of-truth format for each tool. Do not assume CSV is canonical just because a CSV exists. Inspect native artifacts, schemas, keys, headers, MultiIndex structures, metadata, and API docs/source when needed.
+
+Dependency/environment rule:
+Use explicit interpreter paths for fragile or specialized ML/tooling environments. Do not rely on ambiguous global `python`. Document validated interpreter, package versions, model paths, and known pins. Do not debug one package at a time in the wrong environment.
+
+Project-root rule:
+Some ML tools infer model/project paths from config location or working directory. Do not copy configs into unrelated debug folders unless the tool’s project-root behavior is understood. Preserve config/model/metadata path relationships for project-root-sensitive tools.
+
+Settings rule:
+User-editable runtime behavior should live in settings/config where practical, not scattered hardcoded paths. Debug scripts may hardcode debug paths; promoted app modules should accept paths through settings, CLI parameters, function parameters, or central path resolvers.
+
+Database rule:
+Do not hold long SQLite write transactions while calling modules that may also read/write the same database. Prefer short-lived connections around each mutation. Always report database mutation status. Do not mutate DBs in schema-discovery or smoke-inspection scripts unless explicitly testing DB writes.
+
+Schema rule:
+If multiple modules depend on the same DB/file schema, document the schema contract before editing. Do not let each module silently repair or reinterpret schema differently. Prefer one canonical schema owner or a shared schema module once architecture stabilizes.
+
+Output contract rule:
+Every important module should have a clear input/output contract:
+
+* consumes
+* emits
+* native formats
+* optional debug exports
+* side effects
+* durable vs purgeable outputs
+* downstream consumers
+* known traps
+
+Retirement rule:
+Retired or semantically invalid scripts should be explicitly marked retired. Do not reuse them as templates unless the failure is understood and noted. Keep the lesson, not the broken path.
+
+Handoff rule:
+Project summaries should be copyable, versioned, and specific enough to start a new conversation. They should include current state, produced files, validated results, failures, next actions, and rules that changed. Coding notes should stay process-focused and broadly reusable.
+
+UI/GUI rule:
+Avoid giant monolithic GUI rewrites until backend contracts are stable. Prefer thin workflow GUIs over modular backend services/jobs. Keep major modules callable from PowerShell for smoke tests.
+
+Windows workflow rule:
+The user prefers drag-and-drop, BAT launchers, and low typing. Provide commands that can be copied once, or scripts that reduce future typing. Avoid workflows requiring repeated manual path entry.
+
+Path rule:
+Use exact paths only when known. Do not invent paths. Mark unknown paths as unknown and propose discovery. Distinguish live paths from archival/historical paths.
+
+Citations/files rule:
+When answering from uploaded files or repo/discovery outputs, cite or name the specific source when appropriate. Do not claim active runtime paths from filenames alone. A file visible in a flat repo does not prove its local runtime location.
+
+Assistant behavior rule:
+Thoroughness beats speed for architecture, coding, and debug work. The assistant should prefer careful inspection, current-source verification, and shorter planned debug loops over rushing into code generation.

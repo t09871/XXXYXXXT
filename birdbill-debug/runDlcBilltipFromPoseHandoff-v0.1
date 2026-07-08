@@ -1,0 +1,511 @@
+# runDlcBilltipFromPoseHandoff-v0.1.py | v0.1 | 2026-07-07 PDT | Run DLC billtip from pose handoff and parse native H5 predictions
+
+from __future__ import annotations
+
+import csv
+import inspect
+import os
+import shutil
+import sys
+import time
+import traceback
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+SCRIPT_NAME = "runDlcBilltipFromPoseHandoff-v0.1.py"
+SCRIPT_VERSION = "v0.1"
+
+DATABASE_MUTATION = False
+DURABLE_EVIDENCE_WRITTEN = False
+
+ROOT = Path(r"D:\birdbill")
+POSE_HANDOFF_MANIFEST = ROOT / "output" / "debug" / "current-pose-handoff" / "pose-handoff-manifest.csv"
+DLC_CONFIG = ROOT / "modules" / "dlc" / "billtip" / "billtip-HB-2026-06-30" / "config.yaml"
+
+OUT_DIR = ROOT / "output" / "debug" / "current-dlc-billtip-from-pose"
+INPUT_DIR = OUT_DIR / "input"
+REPORT_PATH = OUT_DIR / "dlc-billtip-from-pose-report.txt"
+STAGE_MANIFEST_PATH = OUT_DIR / "dlc-input-stage-manifest.csv"
+PREDICTIONS_PATH = OUT_DIR / "dlc-billtip-predictions.csv"
+
+# Try to keep DLC/headless behavior quiet and non-GUI.
+os.environ.setdefault("DLClight", "True")
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+
+def write_report(lines: List[str]) -> None:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    REPORT_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def boolish(value: Any) -> bool:
+    return str(value).strip().lower() in {"true", "1", "yes", "y"}
+
+
+def safe_float(value: Any) -> Optional[float]:
+    try:
+        text = str(value).strip()
+        if text == "":
+            return None
+        return float(text)
+    except Exception:
+        return None
+
+
+def clamp_float(value: float, low: float, high: float) -> float:
+    return max(low, min(high, value))
+
+
+def read_csv_dicts(path: Path) -> List[Dict[str, str]]:
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def write_csv_dicts(path: Path, rows: List[Dict[str, Any]], fieldnames: List[str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def reset_output_dir() -> None:
+    if OUT_DIR.exists():
+        shutil.rmtree(OUT_DIR)
+    INPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def stage_candidate_images(pose_rows: List[Dict[str, str]]) -> Tuple[List[Dict[str, Any]], int]:
+    staged_rows: List[Dict[str, Any]] = []
+    media_files_written = 0
+
+    candidate_index = 0
+    for row in pose_rows:
+        if not boolish(row.get("dlc_billtip_candidate")):
+            continue
+        if not boolish(row.get("mmpose_ok")):
+            continue
+
+        raw_crop_path = Path(str(row.get("raw_crop_path", "")).strip())
+        if not raw_crop_path.exists():
+            staged_rows.append({
+                **row,
+                "dlc_stage_ok": False,
+                "dlc_stage_note": f"missing raw_crop_path: {raw_crop_path}",
+                "dlc_input_image_path": "",
+                "dlc_input_basename": "",
+            })
+            continue
+
+        candidate_index += 1
+        detection_id = str(row.get("detection_id", f"detection-{candidate_index:04d}")).strip()
+        staged_name = f"{candidate_index:04d}-{detection_id}.jpg"
+        staged_path = INPUT_DIR / staged_name
+
+        shutil.copy2(raw_crop_path, staged_path)
+        media_files_written += 1
+
+        staged_rows.append({
+            **row,
+            "dlc_stage_ok": True,
+            "dlc_stage_note": "",
+            "dlc_input_image_path": str(staged_path),
+            "dlc_input_basename": staged_name,
+        })
+
+    return staged_rows, media_files_written
+
+
+def run_dlc_analyze_time_lapse_frames() -> List[Path]:
+    before = time.time()
+
+    import deeplabcut  # type: ignore
+
+    if not hasattr(deeplabcut, "analyze_time_lapse_frames"):
+        raise RuntimeError("deeplabcut.analyze_time_lapse_frames is not available in this DLC environment.")
+
+    analyze_fn = deeplabcut.analyze_time_lapse_frames
+    signature = inspect.signature(analyze_fn)
+
+    kwargs: Dict[str, Any] = {}
+    if "frametype" in signature.parameters:
+        kwargs["frametype"] = ".jpg"
+    if "shuffle" in signature.parameters:
+        kwargs["shuffle"] = 1
+    if "trainingsetindex" in signature.parameters:
+        kwargs["trainingsetindex"] = 0
+    if "save_as_csv" in signature.parameters:
+        kwargs["save_as_csv"] = True
+    if "gputouse" in signature.parameters:
+        kwargs["gputouse"] = None
+
+    analyze_fn(str(DLC_CONFIG), str(INPUT_DIR), **kwargs)
+
+    h5_paths = []
+    for path in OUT_DIR.rglob("*.h5"):
+        try:
+            if path.stat().st_mtime >= before - 2:
+                h5_paths.append(path)
+        except OSError:
+            pass
+
+    # Some DLC versions write directly inside INPUT_DIR. This is already under OUT_DIR,
+    # but keep a direct scan to make failure reports clearer.
+    h5_paths = sorted(set(h5_paths), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if not h5_paths:
+        raise RuntimeError(f"DLC completed but no new H5 file was found under {OUT_DIR}")
+
+    return h5_paths
+
+
+def normalize_name(value: Any) -> str:
+    return str(value).strip().lower().replace("_", "").replace("-", "").replace(" ", "")
+
+
+def choose_bodypart(columns: Any) -> Tuple[Optional[str], List[str], str]:
+    if not hasattr(columns, "nlevels") or columns.nlevels < 2:
+        return None, [], "columns are not a MultiIndex with bodypart/coord levels"
+
+    bodypart_level = columns.nlevels - 2
+    bodyparts = sorted({str(v) for v in columns.get_level_values(bodypart_level)})
+
+    preferred_names = {
+        "billtip",
+        "billtip1",
+        "bill_tip",
+        "bill-tip",
+        "tip",
+        "beaktip",
+        "beak_tip",
+    }
+    preferred_normalized = {normalize_name(v) for v in preferred_names}
+
+    for bodypart in bodyparts:
+        if normalize_name(bodypart) in preferred_normalized:
+            return bodypart, bodyparts, ""
+
+    if len(bodyparts) == 1:
+        return bodyparts[0], bodyparts, "only one bodypart present; using it as billtip candidate"
+
+    return None, bodyparts, "no billtip-like bodypart found"
+
+
+def get_coord_value(series: Any, bodypart: str, coord: str) -> Optional[float]:
+    columns = list(series.index)
+    for col in columns:
+        if not isinstance(col, tuple):
+            continue
+        if len(col) < 2:
+            continue
+        if str(col[-2]) == bodypart and str(col[-1]).lower() == coord.lower():
+            return safe_float(series[col])
+    return None
+
+
+def index_to_basename(index_value: Any) -> str:
+    if isinstance(index_value, tuple) and index_value:
+        index_value = index_value[-1]
+    text = str(index_value)
+    text = text.replace("\\", "/")
+    return Path(text).name
+
+
+def parse_dlc_h5(h5_path: Path, staged_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    import pandas as pd  # type: ignore
+
+    try:
+        df = pd.read_hdf(h5_path)
+    except Exception:
+        with pd.HDFStore(h5_path, mode="r") as store:
+            keys = store.keys()
+            if not keys:
+                raise RuntimeError(f"No readable keys found in H5: {h5_path}")
+            df = store[keys[0]]
+
+    bodypart, bodyparts, bodypart_note = choose_bodypart(df.columns)
+    if bodypart is None:
+        raise RuntimeError(f"Could not select billtip bodypart. Available bodyparts: {bodyparts}. Note: {bodypart_note}")
+
+    staged_by_basename = {
+        str(row.get("dlc_input_basename", "")).strip(): row
+        for row in staged_rows
+        if boolish(row.get("dlc_stage_ok"))
+    }
+    staged_ok_rows = [row for row in staged_rows if boolish(row.get("dlc_stage_ok"))]
+
+    prediction_rows: List[Dict[str, Any]] = []
+
+    for order_index, (df_index, series) in enumerate(df.iterrows()):
+        index_basename = index_to_basename(df_index)
+        staged = staged_by_basename.get(index_basename)
+
+        match_method = "basename"
+        if staged is None and order_index < len(staged_ok_rows):
+            staged = staged_ok_rows[order_index]
+            match_method = "row_order"
+
+        if staged is None:
+            prediction_rows.append({
+                "prediction_ok": False,
+                "prediction_note": f"could not map DLC row to staged input: {df_index}",
+                "dlc_h5_path": str(h5_path),
+                "dlc_row_index": str(df_index),
+                "dlc_row_basename": index_basename,
+            })
+            continue
+
+        x = get_coord_value(series, bodypart, "x")
+        y = get_coord_value(series, bodypart, "y")
+        likelihood = get_coord_value(series, bodypart, "likelihood")
+
+        head_x1 = safe_float(staged.get("head_roi_x1"))
+        head_y1 = safe_float(staged.get("head_roi_y1"))
+        head_x2 = safe_float(staged.get("head_roi_x2"))
+        head_y2 = safe_float(staged.get("head_roi_y2"))
+        bill_base_x = safe_float(staged.get("bill_base_proxy_x"))
+        bill_base_y = safe_float(staged.get("bill_base_proxy_y"))
+
+        in_head_roi = ""
+        if None not in (x, y, head_x1, head_y1, head_x2, head_y2):
+            in_head_roi = bool(head_x1 <= x <= head_x2 and head_y1 <= y <= head_y2)
+
+        distance_to_bill_base = ""
+        if None not in (x, y, bill_base_x, bill_base_y):
+            dx = float(x) - float(bill_base_x)
+            dy = float(y) - float(bill_base_y)
+            distance_to_bill_base = (dx * dx + dy * dy) ** 0.5
+
+        decision = "dlc_billtip_prediction_ready"
+        note_parts = []
+        if bodypart_note:
+            note_parts.append(bodypart_note)
+
+        if x is None or y is None:
+            decision = "missing_billtip_xy"
+            note_parts.append("missing x/y")
+        elif likelihood is not None and likelihood < 0.10:
+            decision = "low_likelihood_debug_only"
+            note_parts.append("likelihood below 0.10")
+        elif in_head_roi is False:
+            decision = "outside_pose_head_roi_debug_review"
+            note_parts.append("billtip outside MMPose head ROI")
+
+        prediction_rows.append({
+            "prediction_ok": x is not None and y is not None,
+            "prediction_note": "; ".join(note_parts),
+            "pose_handoff_decision": staged.get("pose_handoff_decision", ""),
+            "mmpose_input_id": staged.get("mmpose_input_id", ""),
+            "detection_id": staged.get("detection_id", ""),
+            "frame_id": staged.get("frame_id", ""),
+            "source_video": staged.get("source_video", ""),
+            "source_frame_index": staged.get("source_frame_index", ""),
+            "camera_local_time_seconds": staged.get("camera_local_time_seconds", ""),
+            "raw_crop_path": staged.get("raw_crop_path", ""),
+            "raw_crop_width": staged.get("raw_crop_width", ""),
+            "raw_crop_height": staged.get("raw_crop_height", ""),
+            "dlc_input_image_path": staged.get("dlc_input_image_path", ""),
+            "dlc_input_basename": staged.get("dlc_input_basename", ""),
+            "dlc_match_method": match_method,
+            "dlc_h5_path": str(h5_path),
+            "dlc_row_index": str(df_index),
+            "dlc_row_basename": index_basename,
+            "dlc_bodypart_used": bodypart,
+            "dlc_available_bodyparts": "|".join(bodyparts),
+            "billtip_x_raw_crop": "" if x is None else f"{x:.3f}",
+            "billtip_y_raw_crop": "" if y is None else f"{y:.3f}",
+            "billtip_likelihood": "" if likelihood is None else f"{likelihood:.6f}",
+            "head_roi_x1": staged.get("head_roi_x1", ""),
+            "head_roi_y1": staged.get("head_roi_y1", ""),
+            "head_roi_x2": staged.get("head_roi_x2", ""),
+            "head_roi_y2": staged.get("head_roi_y2", ""),
+            "bill_base_proxy_x": staged.get("bill_base_proxy_x", ""),
+            "bill_base_proxy_y": staged.get("bill_base_proxy_y", ""),
+            "billtip_in_head_roi": in_head_roi,
+            "billtip_distance_to_bill_base_proxy": (
+                "" if distance_to_bill_base == "" else f"{float(distance_to_bill_base):.3f}"
+            ),
+            "dlc_billtip_decision": decision,
+        })
+
+    return prediction_rows
+
+
+def main() -> int:
+    status = "FAIL"
+    report_lines: List[str] = []
+    media_files_written = 0
+
+    try:
+        reset_output_dir()
+
+        report_lines.extend([
+            f"script_name = {SCRIPT_NAME}",
+            f"script_version = {SCRIPT_VERSION}",
+            f"python_executable = {sys.executable}",
+            f"pose_handoff_manifest = {POSE_HANDOFF_MANIFEST}",
+            f"dlc_config = {DLC_CONFIG}",
+            f"output_dir = {OUT_DIR}",
+            f"input_dir = {INPUT_DIR}",
+            "",
+        ])
+
+        if not POSE_HANDOFF_MANIFEST.exists():
+            raise FileNotFoundError(f"Missing pose handoff manifest: {POSE_HANDOFF_MANIFEST}")
+        if not DLC_CONFIG.exists():
+            raise FileNotFoundError(f"Missing DLC config: {DLC_CONFIG}")
+
+        pose_rows = read_csv_dicts(POSE_HANDOFF_MANIFEST)
+        staged_rows, media_files_written = stage_candidate_images(pose_rows)
+
+        stage_fields = [
+            "mmpose_input_id",
+            "detection_id",
+            "frame_id",
+            "source_video",
+            "source_frame_index",
+            "camera_local_time_seconds",
+            "raw_crop_path",
+            "raw_crop_width",
+            "raw_crop_height",
+            "retention_decision",
+            "retention_score",
+            "mmpose_ok",
+            "dlc_billtip_candidate",
+            "smart_cropper_candidate",
+            "pose_handoff_decision",
+            "head_roi_x1",
+            "head_roi_y1",
+            "head_roi_x2",
+            "head_roi_y2",
+            "bill_base_proxy_x",
+            "bill_base_proxy_y",
+            "dlc_stage_ok",
+            "dlc_stage_note",
+            "dlc_input_image_path",
+            "dlc_input_basename",
+        ]
+        write_csv_dicts(STAGE_MANIFEST_PATH, staged_rows, stage_fields)
+
+        staged_ok_count = sum(1 for row in staged_rows if boolish(row.get("dlc_stage_ok")))
+
+        report_lines.extend([
+            f"pose_rows = {len(pose_rows)}",
+            f"staged_rows = {len(staged_rows)}",
+            f"staged_ok_count = {staged_ok_count}",
+            f"stage_manifest = {STAGE_MANIFEST_PATH}",
+            f"media_files_written = {media_files_written}",
+            "",
+        ])
+
+        if staged_ok_count == 0:
+            raise RuntimeError("No valid DLC input images were staged.")
+
+        h5_paths = run_dlc_analyze_time_lapse_frames()
+        selected_h5 = h5_paths[0]
+
+        prediction_rows = parse_dlc_h5(selected_h5, staged_rows)
+
+        prediction_fields = [
+            "prediction_ok",
+            "prediction_note",
+            "pose_handoff_decision",
+            "mmpose_input_id",
+            "detection_id",
+            "frame_id",
+            "source_video",
+            "source_frame_index",
+            "camera_local_time_seconds",
+            "raw_crop_path",
+            "raw_crop_width",
+            "raw_crop_height",
+            "dlc_input_image_path",
+            "dlc_input_basename",
+            "dlc_match_method",
+            "dlc_h5_path",
+            "dlc_row_index",
+            "dlc_row_basename",
+            "dlc_bodypart_used",
+            "dlc_available_bodyparts",
+            "billtip_x_raw_crop",
+            "billtip_y_raw_crop",
+            "billtip_likelihood",
+            "head_roi_x1",
+            "head_roi_y1",
+            "head_roi_x2",
+            "head_roi_y2",
+            "bill_base_proxy_x",
+            "bill_base_proxy_y",
+            "billtip_in_head_roi",
+            "billtip_distance_to_bill_base_proxy",
+            "dlc_billtip_decision",
+        ]
+        write_csv_dicts(PREDICTIONS_PATH, prediction_rows, prediction_fields)
+
+        prediction_ok_count = sum(1 for row in prediction_rows if boolish(row.get("prediction_ok")))
+        ready_count = sum(
+            1 for row in prediction_rows
+            if str(row.get("dlc_billtip_decision", "")) == "dlc_billtip_prediction_ready"
+        )
+
+        status = "PASS"
+
+        report_lines.extend([
+            f"dlc_h5_selected = {selected_h5}",
+            f"dlc_h5_candidates_found = {len(h5_paths)}",
+            f"prediction_rows = {len(prediction_rows)}",
+            f"prediction_ok_count = {prediction_ok_count}",
+            f"ready_count = {ready_count}",
+            f"predictions_csv = {PREDICTIONS_PATH}",
+            "",
+            f"status = {status}",
+            f"database_mutation = {str(DATABASE_MUTATION).lower()}",
+            f"durable_evidence_written = {str(DURABLE_EVIDENCE_WRITTEN).lower()}",
+            f"media_files_written = {media_files_written}",
+        ])
+
+        write_report(report_lines)
+
+        print(f"script_name = {SCRIPT_NAME}")
+        print(f"script_version = {SCRIPT_VERSION}")
+        print(f"status = {status}")
+        print(f"output_dir = {OUT_DIR}")
+        print(f"report = {REPORT_PATH}")
+        print(f"stage_manifest = {STAGE_MANIFEST_PATH}")
+        print(f"predictions_csv = {PREDICTIONS_PATH}")
+        print(f"database_mutation = {str(DATABASE_MUTATION).lower()}")
+        print(f"durable_evidence_written = {str(DURABLE_EVIDENCE_WRITTEN).lower()}")
+        print(f"media_files_written = {media_files_written}")
+        return 0
+
+    except Exception as exc:
+        report_lines.extend([
+            "",
+            f"status = {status}",
+            f"error_type = {type(exc).__name__}",
+            f"error = {exc}",
+            "",
+            "traceback:",
+            traceback.format_exc(),
+            "",
+            f"database_mutation = {str(DATABASE_MUTATION).lower()}",
+            f"durable_evidence_written = {str(DURABLE_EVIDENCE_WRITTEN).lower()}",
+            f"media_files_written = {media_files_written}",
+        ])
+        write_report(report_lines)
+
+        print(f"script_name = {SCRIPT_NAME}")
+        print(f"script_version = {SCRIPT_VERSION}")
+        print(f"status = {status}")
+        print(f"output_dir = {OUT_DIR}")
+        print(f"report = {REPORT_PATH}")
+        print(f"database_mutation = {str(DATABASE_MUTATION).lower()}")
+        print(f"durable_evidence_written = {str(DURABLE_EVIDENCE_WRITTEN).lower()}")
+        print(f"media_files_written = {media_files_written}")
+        print(f"error = {exc}")
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
